@@ -4,10 +4,9 @@ Version: 0.0.0.9000
 Authors@R: 
     person(given = "Zhengjia", family = "Wang", 
       email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
-Description: Loads 'Blackrock' neuro-recording data into the memory, provides
+Description: Loads 'Blackrock' neural signal data into the memory, provides
     utility tools to exports the data into common formats, for example,
-    plain-text 'csv' tables for headers and 'Matlab' or 'HDF5' for data 
-    matrices.
+    plain-text 'tsv' tables for headers and 'HDF5' for data matrices.
 License: MPL-2.0 | file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -22,3 +21,4 @@ LinkingTo:
     cpp11
 SystemRequirements: C++11
 Copyright: For the readNSx package: Zhengjia Wang.
+URL: http://dipterix.org/readNSx/
