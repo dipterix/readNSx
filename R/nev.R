@@ -83,7 +83,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
       channel_label <- tbl$label
       sel <- !endsWith(channel_label, as.character(channel_id))
       channel_label[sel] <- sprintf("%s-%03d", channel_label[sel], channel_id[sel])
-      tbl$filename = channel_label
+      tbl$filename <- channel_label
     }
     tbl$original_filename <- file_name
     append_table_rds(
@@ -183,7 +183,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
           spike_data <- parse_int16(value$waveform)
         } else {
           byte_size <- waveform_setting$bytes_per_waveform[[1]]
-          if( byte_size <= 0 ) { byte_size = 1 }
+          if( byte_size <= 0 ) { byte_size <- 1 }
           spike_data <- switch(
             as.character(byte_size),
             "1" = {

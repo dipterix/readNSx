@@ -222,7 +222,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   ieeg_path <- file.path(export_root, sprintf("%s_ieeg", export_filebase))
   dir_create2(ieeg_path)
   # save partition summary
-  basic_summary$n_partitions = nsx_data$nparts
+  basic_summary$n_partitions <- nsx_data$nparts
   append_table_rds(
     path = file.path(ieeg_path, "configurations.rds"),
     new_tbl = basic_summary,

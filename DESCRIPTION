@@ -8,6 +8,7 @@ Description: Loads 'Blackrock' neural signal data into the memory, provides
     utility tools to exports the data into common formats, for example,
     plain-text 'tsv' tables for headers and 'HDF5' for data matrices.
 License: MPL-2.0 | file LICENSE
+Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
@@ -22,3 +23,4 @@ LinkingTo:
 SystemRequirements: C++11
 Copyright: For the readNSx package: Zhengjia Wang.
 URL: http://dipterix.org/readNSx/
+BugReports: https://github.com/dipterix/readNSx/issues
