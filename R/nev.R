@@ -161,7 +161,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
   key_idx <- rules$start_byte + seq_len(rules$.bytes)
   waveform_lut <- as.data.frame(header_extended$NEUEVWAV)
-  waveform_lut <- waveform_lut[,c("electrode_id", "digitization_factor", "bytes_per_waveform", "spike_width")]
+  tryCatch({
+    waveform_lut <- waveform_lut[,c("electrode_id", "digitization_factor", "bytes_per_waveform", "spike_width")]
+  }, error = function(e){})
   waveform_flag <- header_basic$additional_flags == 1
   waveform_lengths <- apply(buf, 2, function(data) {
     # DIPSAUS DEBUG START
