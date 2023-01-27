@@ -1,0 +1,24 @@
+Package: readNSx
+Title: Read 'Blackrock' Files ('NEV', 'NSx')
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Zhengjia", family = "Wang", 
+      email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
+Description: Loads 'Blackrock' neuro-recording data into the memory, provides
+    utility tools to exports the data into common formats, for example,
+    plain-text 'csv' tables for headers and 'Matlab' or 'HDF5' for data 
+    matrices.
+License: MPL-2.0 | file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Imports:
+    data.table,
+    fastmap,
+    hdf5r,
+    jsonlite,
+    R6
+LinkingTo: 
+    cpp11
+SystemRequirements: C++11
+Copyright: For the readNSx package: Zhengjia Wang.
