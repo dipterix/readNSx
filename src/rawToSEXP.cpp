@@ -1,3 +1,4 @@
+#include <cstring>
 #include <cpp11.hpp>
 
 [[cpp11::register]]
