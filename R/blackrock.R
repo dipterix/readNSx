@@ -24,6 +24,53 @@
 #'
 #' @returns A list of configurations, see 'Details'.
 #'
+#' @section 'NEV' Data:
+#' A 'NEV' object consists of three sections:
+#'
+#' Section 1 contains basic information such as the time-origin of all the
+#' time-stamps, the time-stamp sampling frequency, data packets sizes.
+#'
+#' Section 2 is extended header containing the configurations of channels,
+#' digital signals, etc. For any data packets in section 3, there should
+#' be at least one table in this section describing the settings.
+#'
+#' section 3 is a collection of event packets such as digital signal inputs (
+#' most likely to be used at version 2.2 or by 'Ripple'), spike waveform,
+#' comments (sometimes storing epoch information), etc.
+#'
+#' Please be aware that while most common entries can be found across different
+#' file versions, some entries are version-specific. If you are making your
+#' script general, you need to be very careful handling these differences.
+#' For more information, please search for the data specification manual
+#' from the 'Blackrock-Microsystems' website.
+#'
+#' @section 'NSx' Data:
+#' A 'NSx' file refers to the data files ending with \code{'ns1'} through
+#' \code{'ns9'}. Common types are \code{'ns2'} (sampling at 1000 Hz),
+#' \code{'ns3'} (sampling at 2000 Hz), and \code{'ns5'} (sampling at 30,000 Hz).
+#'
+#' A 'NSx' file also consists of three sections. Section 1 contains basic
+#' information such as the time-origin of all the time-stamps, sampling
+#' frequencies, and channel counts within the file. Please be careful that
+#' item \code{time_resolution_timestamp} is not the sampling frequency for
+#' signals. This item is the sampling frequency for time-stamp. To obtain the
+#' signal sample rate, divided \code{time_resolution_timestamp} by
+#' \code{period}. For example, \code{'ns3'} usually has time-stamp resolution
+#' \code{30,000} and \code{period=15}, hence the signal sample rate is
+#' \code{30000/15=2000Hz}.
+#'
+#' Section 2 usually contains one and only one channel table of which the
+#' number of rows should coincide with number of channels from section 1. Other
+#' information such as channel labels, physical connectors, pins, units, filter
+#' settings, digital-to-analog conversion are also included. Since
+#' \code{readNSx} always attempts to convert signals in 'volts' or 'millivolts'
+#' to 'microvolts', the \code{'units'} column might be different to what's
+#' actual recorded in the 'NSx' file headers.
+#'
+#' Section 3 contains partitions of continuous recording. When imported/loaded
+#' from \code{readNSx}, the digital signals are always converted to analog
+#' signals with 'microvolts' unit. Please use \code{\link{get_channel}} to
+#' get the channel data.
 #'
 #' @export
 import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
@@ -75,7 +122,7 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
   }
   inc_progress(msg, "Importing Blackrock")
 
-  results <- list()
+  results <- structure(list(), class = "readNSx_collection")
 
   if(length(path_nev)) {
     inc_progress(sprintf("Excluding %s", paste(exclude_events, collapse = ", ")), "Importing NEV")
@@ -94,6 +141,268 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
     }
   }
   return(results)
+}
+
+#' @title Load 'NEV' information from path prefix
+#' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or
+#' \code{'nev/nsx'} object
+#' @param ... reserved for future use
+#' @return 'NEV' header information if \code{x} is valid, otherwise \code{NULL}
+#' @export
+get_nev <- function(x, ...) {
+  UseMethod("get_nev")
+}
+
+#' @export
+get_nev.default <- function(x, ...) {
+  if(length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
+  # x is character - prefix
+  x1 <- file.path(sprintf("%s_events", x), "nev-headers.rds")
+  if(!file.exists(x1)) {
+    x <- gsub("\\.(nev|ns[1-9])$", "", x = x, ignore.case = TRUE)
+    x1 <- file.path(sprintf("%s_events", x), "nev-headers.rds")
+    if(!file.exists(x1)) {
+      warning("Cannot find header file: ", x1)
+      return(NULL)
+    }
+  }
+  nev <- readRDS(x1)
+  if(!inherits(nev, 'readNSx_nev')) {
+    warning("Header file found, but it's not a valid NEV header.")
+    return(NULL)
+  }
+  nev$prefix <- normalizePath(x, mustWork = FALSE)
+  return(nev)
+}
+
+#' @export
+get_nev.readNSx_nev <- function(x, ...) {
+  x
+}
+
+#' @export
+get_nev.readNSx_nsx <- function(x, ...) {
+  return(get_nev.default( x$prefix ))
+}
+
+#' @export
+get_nev.readNSx_collection <- function(x, ...) {
+  x$nev
+}
 
 
+#' @title Get event data packets from 'NEV'
+#' @param x path \code{prefix} (see \code{\link{import_nsp}}), or
+#' \code{'nev/nsx'} object
+#' @param event_type event type to load, common event types are
+#' \describe{
+#' \item{\code{'digital_inputs'}}{packet identifier 0}
+#' \item{\code{'spike'}}{packet identifier 1 to 10000 as of version 3.0}
+#' \item{\code{'recording'}}{packet identifier 65529 as of version 3.0, available after version 3.0}
+#' \item{\code{'configuration'}}{packet identifier 65530 as of version 3.0, available after version 3.0}
+#' \item{\code{'log'}}{packet identifier 65531 as of version 3.0, available after version 3.0}
+#' \item{\code{'button_trigger'}}{packet identifier 65532 as of version 3.0, available after version 3.0}
+#' \item{\code{'tracking'}}{packet identifier 65533 as of version 3.0, available after version 3.0}
+#' \item{\code{'video_sync'}}{packet identifier 65534 as of version 3.0, available after version 3.0}
+#' \item{\code{'comment'}}{packet identifier 65535 as of version 3.0, available after version 2.3}
+#' }
+#' @param ... pass to other methods
+#' @returns A data frame of corresponding event type, or \code{NULL} if event
+#' is not found or invalid
+#' @export
+get_event <- function(x, event_type, ...) {
+  event_type <- tolower(event_type)
+  if(!inherits(x, c("readNSx_collection", "readNSx_nev"))) {
+    # Don't trust the header, always reload
+    x <- get_nev(x)
+    x <- x$prefix
+  }
+  nev <- get_nev(x)
+  if(!inherits(nev, "readNSx_nev")) {
+    stop("get_event: Cannot get NEV events as `x` contains invalid prefix. If you have ever moved/renamed your data, please reload header using updated prefix.")
+  }
+  event_path <- sprintf("%s_events", nev$prefix)
+  if(event_type == "spike") {
+    spike_path <- file.path(event_path, "waveforms.h5")
+    if(!file.exists(spike_path)) { return(NULL) }
+    return(load_h5_all(spike_path))
+  }
+
+  event_file <- file.path(event_path, sprintf("event-%s.rds", event_type))
+
+  if(!file.exists(event_file)) { return(NULL) }
+  return(readRDS(event_file))
+}
+
+
+#' @title Load 'NSx' information from path prefix
+#' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or
+#' \code{'nev/nsx'} object
+#' @param which which 'NSx' to load, for example, \code{which=3} loads
+#' \code{'ns3'} headers
+#' @param ... reserved for future use
+#' @return 'NSx' header information if data is found, otherwise returns
+#' \code{NULL}.
+#' @export
+get_nsx <- function(x, which, ...) {
+  UseMethod("get_nsx")
+}
+
+#' @export
+get_nsx.default <- function(x, which, ...) {
+  if(length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
+  which <- tolower(as.character(which))
+  if(nchar(which) < 3) {
+    which <- sprintf("ns%s", which)
+  }
+  if(!which %in% sprintf("ns%d", seq_len(9))) { return(NULL) }
+  # x is character - prefix
+  x1 <- file.path(sprintf("%s_ieeg", x), sprintf("%s_summary.rds", which))
+  if(!file.exists(x1)) {
+    x <- gsub("\\.(nev|ns[1-9])$", "", x = x, ignore.case = TRUE)
+    x1 <- file.path(sprintf("%s_events", x), sprintf("%s_summary.rds", which))
+    if(!file.exists(x1)) {
+      return(NULL)
+    }
+  }
+  nsx <- readRDS(x1)
+  if(!inherits(nsx, 'readNSx_nsx')) {
+    warning("Header file found, but it's not a valid NSx header.")
+    return(NULL)
+  }
+  nsx$prefix <- normalizePath(x, mustWork = FALSE)
+  return(nsx)
+}
+
+#' @export
+get_nsx.readNSx_nsx <- function(x, which, ...) {
+  which <- tolower(as.character(which))
+  if(nchar(which) < 3) {
+    which <- sprintf("ns%s", which)
+  }
+  if(!identical(x$which, which)) { return(NULL) }
+  return(x)
+}
+
+#' @export
+get_nsx.readNSx_nev <- function(x, which, ...) {
+  return(get_nsx.default( x$prefix, which ))
+}
+
+#' @export
+get_nsx.readNSx_collection <- function(x, which, ...) {
+  which <- tolower(as.character(which))
+  if(nchar(which) < 3) {
+    which <- sprintf("ns%s", which)
+  }
+  x[[which]]
+}
+
+#' Get channel data
+#' @description Obtain channel information and data from given prefix and
+#' channel ID.
+#' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or
+#' \code{'nev/nsx'} object
+#' @param channel_id integer channel number. Please be aware that channel
+#' number, channel ID, electrode ID refer to the same concept in
+#' 'Blackrock' 'NEV' specifications. Electrodes are not physical metals, they
+#' refer to channels for historical reasons.
+#' @return A list containing channel data and meta information, along with
+#' the enclosing 'NSx' information; for invalid channel ID, this function
+#' returns \code{NULL}
+#' @export
+get_channel <- function(x, channel_id) {
+
+  channel_id <- as.integer(channel_id)
+  if(length(channel_id) != 1 || is.na(channel_id)) {
+    stop("readNSX::get_channel: invalid `channel_id`, must be an integer of length 1")
+  }
+
+  channel_info <- NULL
+  nsx <- NULL
+
+  # get nsx in reverse order
+  for(which in rev(seq_len(9))) {
+    nsx <- get_nsx(x, which = which)
+    if(inherits(nsx, "readNSx_nsx")) {
+      if(channel_id %in% nsx$header_extended$CC$electrode_id) {
+        channel_info <- nsx$header_extended$CC[
+          nsx$header_extended$CC$electrode_id == channel_id,
+        ]
+        # get sample rate
+        channel_info$sample_rate_signal <- 30000 / nsx$header_basic$period
+        channel_info$sample_rate_timestamp <- nsx$header_basic$time_resolution_timestamp
+        channel_info$which_nsp <- which
+        if(length(nsx$partition_prefix) != 1) {
+          nsx$partition_prefix <- "/part"
+        }
+        break
+      }
+    }
+  }
+
+  if(is.null(channel_info)) { return(NULL) }
+
+  # make sure using the first one
+  channel_info <- channel_info[1,]
+
+  channel_filename <- channel_filename(
+    channel_id = channel_info$electrode_id,
+    channel_label = channel_info$electrode_label)
+
+  channel_info$filename <- channel_filename
+
+  partition_path_prefix <- sprintf("%s_ieeg%s", nsx$prefix, nsx$partition_prefix)
+
+  data <- structure(
+    lapply(seq_len(nsx$nparts), function(ii) {
+      fpath <- file.path(sprintf("%s%d", partition_path_prefix, ii), channel_filename)
+      if(!file.exists(fpath)) {
+        return(NULL)
+      }
+      list(
+        meta = jsonlite::fromJSON(load_h5(fpath, "meta", ram = TRUE)),
+        data = load_h5(fpath, "data", read_only = TRUE, ram = FALSE)
+      )
+    }),
+    names = sprintf("part%d", seq_len(nsx$nparts))
+  )
+
+  structure(
+    list(
+      nsx = nsx,
+      channel_info = channel_info,
+      channel_detail = data
+    )
+  )
+
+
+}
+
+
+#' @title Get a collection list containing 'NEV' and 'NSx' headers
+#' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or
+#' \code{'nev/nsx'} object
+#' @return A list containing \code{'nev'} and imported \code{'nsx'} headers,
+#' see \code{\link{import_nsp}} for details
+#' @export
+get_nsp <- function(x) {
+  nev <- get_nev(x)
+  if(!inherits(nev, "readNSx_nev")) {
+    stop("readNSx::get_nsp: Cannot obtain the NEV header information")
+  }
+
+  re <- structure(
+    list(nev = nev),
+    class = "readNSx_collection"
+  )
+
+  lapply(seq_len(9), function(ii) {
+    nsx <- get_nsx(nev, which = ii)
+    if(inherits(nsx, "readNSx_nsx")) {
+      re[[ sprintf("ns%d", ii) ]] <<- nsx
+    }
+  })
+
+  re
 }

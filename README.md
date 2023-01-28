@@ -52,9 +52,25 @@ readNSx::import_nsp(
 The imported file paths will start with `prefix`. In the following context, I'll use `<prefix>` to represent specified in the function `import_nsp`.
 
 ```
-partition_info.tsv      - Name of continuous recording within the block, 
+partition_info         - Name of continuous recording within the block, 
                           sample rates, starting time per partition per NSx
-<prefix>_scans.tsv      - Basic information for current block
-<prefix>_channels.tsv   - Electrode channel information ( ID, Label, ... )
-<prefix>_events         - 
+<prefix>_scans         - Basic information for current block
+<prefix>_channels      - Electrode channel information ( ID, Label, ... )
+<prefix>_events/       - NEV setting headers and data packets (events)
+  - DIGLABEL           - Digital input setup
+  - NEUEVLBL           - Channel labels
+  - NEUEVWAVE          - Spike waveform settings
+  - ...                - Other settings
+  - event-***          - Data packets (digital inputs, comments...)
+  - waveforms.h5       - Spike waveforms & cluster
+<prefix>_ieeg          - NSx data folder
+  - configurations.rds - NSx basic headers (versions, number of partitions, ...)
+  - partition_info     - Continuous recording duration, start time, sample rates
+  - nsx_summary.rds    - Internally used
+  - part1/, part2/, ...- Channel folder
+    - XXXX-001.h5      - Channel data file, each file correspond to a channel.
+    - XXXX-002.h5         The file name ALWAYS ends with channel ID.
+    - ...                 Each HDF5 file contains a "meta" and a "data" part,
+                            "meta": JSON string of channel information
+                            "data": numerical signal voltage data (in `uV`)
 ```

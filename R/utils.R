@@ -225,3 +225,11 @@ format_time_origin <- function( x ) {
   sprintf("%04d-%02d%02dT%02d:%02d:%02d.%03d", x$Year, x$Month, x$Day, x$Hour, x$Minute, x$Second, x$Millisecond)
 
 }
+
+channel_filename <- function(channel_id, channel_label) {
+  # no NA check
+  channel_id <- as.integer(channel_id)
+  sel <- !endsWith(channel_label, as.character(channel_id))
+  channel_label[sel] <- sprintf("%s-%03d", channel_label[sel], channel_id[sel])
+  sprintf("%s.h5", channel_label)
+}

@@ -385,4 +385,51 @@ h5_names <- function(file){
   names
 }
 
+h5FileValid <- function(filename){
+  if(!length(filename)){ return(FALSE) }
+  filename <- filename[[1]]
+  if(!file.exists(filename)){ return(FALSE) }
+  if(isTRUE(file.info(filename)[['isdir']])){ return(FALSE) }
+  filename <- normalizePath(filename)
+  return(tryCatch({
+    hdf5r::is.h5file(filename)
+  }, error = function(e){ FALSE }))
+}
 
+
+load_h5_all <- function(file, ram = FALSE){
+  file <- normalizePath(file, mustWork = TRUE)
+  # Check if the file is HDF5 format
+  if( h5FileValid(file) ){
+
+    dset_names <- h5_names(file)
+    re <- structure(
+      new.env(parent = emptyenv()),
+      class = c("readNSx_h5_datasets", "readNSx_printable", "environment")
+    )
+    lapply(dset_names, function(nm){
+      y <- load_h5(file, name = nm, ram = ram)
+      nm_path <- strsplit(nm, "/")[[1]]
+      d <- re
+      for(ii in seq_along(nm_path)){
+        nm <- nm_path[[ii]]
+        if(ii != length(nm_path)){
+          if(!exists(nm, envir = d)) {
+            d[[nm]] <- structure(
+              new.env(parent = emptyenv()),
+              class = c("readNSx_h5_datasets", "readNSx_printable", "environment")
+            )
+          }
+          d <- d[[nm]]
+        } else {
+          d[[nm]] <- y
+        }
+      }
+      NULL
+    })
+
+  }else{
+    re <- NULL
+  }
+  re
+}

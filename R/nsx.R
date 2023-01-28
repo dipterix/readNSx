@@ -2,15 +2,24 @@
 # internally used. Do not call by yourself
 read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, partition_prefix = "/part") {
 
+  # get "x" in NSx
+  which_nsx = tolower(substring(path, nchar(path) - 2))
+  if(!which_nsx %in% sprintf("ns%d", seq_len(9))) {
+    stop("read_nsx: path must ends with .ns1 to .ns9")
+  }
+
   partition_prefix <- gsub("[.]", "_", partition_prefix)
   partition_prefix <- gsub("[\\/]{1,}$", "", partition_prefix)
 
   # DIPSAUS DEBUG START
   # path <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/raw/YEK/EMU-057_subj-YEK_task-LOCALIZER_run-01_NSP-1.ns3'
+  # prefix <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-YEK/ses-057/ieeg/sub-YEK_ses-057_task-localizer_acq-NSP1_run-01'
+  # path = "~/Dropbox (PENN Neurotrauma)/RAVE/Samples/raw/PAV005/block003/PAV005_datafile_003.ns3"
+  # prefix = "~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-PAV005/ses-003/ieeg/sub-PAV005_ses-003_task-loc_acq-NSP1_run-01"
   # ftype <- get_file_type(path = path)
   # spec <- get_specification(ftype$version, "nsx")
-  # prefix <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-YEK/ses-057/ieeg/sub-YEK_ses-057_task-localizer_acq-NSP1_run-01'
   # fresh_start <- FALSE
+  # which_nsx = tolower(substring(path, nchar(path) - 2))
   if(missing(spec) || is.null(spec)) {
     ftype <- get_file_type(path = path)
     spec <- get_specification(ftype$version, "nsx")
@@ -98,7 +107,9 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
       header_basic = header_basic,
       header_extended = header_extended,
       nparts = 0,
-      prefix = prefix
+      which = which_nsx,
+      prefix = prefix,
+      partition_prefix = partition_prefix
     ),
     class = c("readNSx_nsx", "readNSx_printable")
   )
@@ -116,7 +127,6 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   item <- packet_value_spec$data_points
   item$name <- "data_points"
   parse_value <- get_parse_function(item$type)
-
 
   # Calculate digital to analog transformation
   units <- sapply(header_extended$CC$units[seq_len(n_channels)], function(unit) {
@@ -195,11 +205,10 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
     lapply(seq_len(n_channels), function(ii) {
       channel_id <- header_extended$CC$electrode_id[[ii]]
       channel_label <- header_extended$CC$electrode_label[[ii]]
-      if( label_contains_channel[[ii]] ) {
-        fname <- file.path(dir, sprintf("%s.h5", channel_label))
-      } else {
-        fname <- file.path(dir, sprintf("%s-%03d.h5", channel_label, channel_id))
-      }
+      fname <- file.path(dir, channel_filename(
+        channel_id = channel_id,
+        channel_label = channel_label))
+
       # save meta information
       save_h5(
         x = jsonlite::toJSON(as.list(tbl), auto_unbox = TRUE),
@@ -229,7 +238,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
     index_column = "original_filename", obsolete_values = file_name)
 
   # save nsx_data
-  saveRDS(nsx_data, file = file.path(ieeg_path, "summary.rds"))
+  saveRDS(nsx_data, file = file.path(ieeg_path, sprintf("%s_summary.rds", which_nsx)))
 
   return(nsx_data)
 }

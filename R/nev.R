@@ -79,11 +79,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   for(nm in names(header_extended)) {
     tbl <- header_extended[[nm]]
     if(nm == "NEUEVLBL") {
-      channel_id <- tbl$electrode_id
-      channel_label <- tbl$label
-      sel <- !endsWith(channel_label, as.character(channel_id))
-      channel_label[sel] <- sprintf("%s-%03d", channel_label[sel], channel_id[sel])
-      tbl$filename <- channel_label
+      tbl$filename <- channel_filename(
+        channel_id = tbl$electrode_id,
+        channel_label = tbl$label)
     }
     tbl$original_filename <- file_name
     append_table_rds(
@@ -101,10 +99,12 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
       specification = spec,
       header_basic = header_basic,
       header_extended = header_extended,
-      data_packets = structure(
-        data_packets,
-        class = c("readNSx_nev_data_packets", "readNSx_printable", "list")
-      )
+      # data_packets = structure(
+      #   data_packets,
+      #   class = c("readNSx_nev_data_packets", "readNSx_printable", "list")
+      # ),
+      event_types = NULL,
+      prefix = prefix
     ),
     exclude_events = exclude_events,
     class = c(
@@ -113,7 +113,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     )
   )
 
+
   if( data_packet_bytes <= 0) {
+    saveRDS(nev_data, file = file.path(extra_path, "nev-headers.rds"))
     return( nev_data )
   }
 
@@ -129,6 +131,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   }
 
   if( npackets <= 0 ) {
+    saveRDS(nev_data, file = file.path(extra_path, "nev-headers.rds"))
     return( nev_data )
   }
 
@@ -162,7 +165,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   key_idx <- rules$start_byte + seq_len(rules$.bytes)
   waveform_lut <- as.data.frame(header_extended$NEUEVWAV)
   tryCatch({
-    waveform_lut <- waveform_lut[,c("electrode_id", "digitization_factor", "bytes_per_waveform", "spike_width")]
+    waveform_lut <- waveform_lut[,c("electrode_id", "digitization_factor", "bytes_per_waveform")]
   }, error = function(e){})
   waveform_flag <- header_basic$additional_flags == 1
   waveform_lengths <- apply(buf, 2, function(data) {
@@ -221,6 +224,8 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     queue <- data_packets$get(event_type)
     if( event_type == "spike" ) {
 
+      nev_data$event_types <- c(nev_data$event_types, "spike")
+
       # needs to remove this type: data is too big
       data_packets$remove( event_type )
 
@@ -254,6 +259,8 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
     } else if( queue$size() > 0 ) {
 
+      nev_data$event_types <- c(nev_data$event_types, event_type)
+
       tbl <- data.table::rbindlist(queue$as_list())
       tbl$time_in_seconds <- tbl$timestamp / header_basic$time_resolution_timestamp
       tbl$original_filename <- file_name
@@ -265,6 +272,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     }
   }
 
+  saveRDS(nev_data, file = file.path(extra_path, "nev-headers.rds"))
   return( nev_data )
 }
 

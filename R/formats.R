@@ -81,11 +81,13 @@ format.readNSx_nev <- function(x, ...) {
     sprintf("<Blackrock NEV data, version: %s>", x$specification$version),
     format.readNSx_nev_basic_header( x$header_basic ),
     format.readNSx_nev_extended_header( x$header_extended ),
-    format.readNSx_nev_data_packets( x$data_packets )
+    "Data packet information (NEV):",
+    sprintf("  Prefix: %s", x$prefix),
+    sprintf("  Event types: %s", paste(x$event_types, collapse = ", "))
   )
   excluded <- attr(x, "packets_excluded")
   if(length(excluded)) {
-    s <- c(s, sprintf("  Excluded packet IDs: %s", deparse_svec(excluded)))
+    s <- c(s, sprintf("  Excluded event types: %s", deparse_svec(excluded)))
   }
   paste(s, collapse = "\n")
 }
@@ -143,4 +145,27 @@ format.readNSx_nsx <- function(x, ...) {
   )
 
   paste(s, collapse = "\n")
+}
+
+format_h5_datasets <- function(x, sep = "$") {
+
+  if(!inherits(x, "readNSx_h5_datasets")) { return("") }
+
+  s <- unlist(lapply(names(x), function(nm) {
+    d <- x[[nm]]
+    sprintf("%s%s%s", sep, nm, format_h5_datasets(d, sep = sep))
+  }))
+
+  return(s)
+}
+
+#' @export
+format.readNSx_h5_datasets <- function(x, ...) {
+  return(paste(
+    collapse = "\n",
+    c(
+      "<HDF5 data collection> (with the following names)",
+      sprintf("  %s", format_h5_datasets(x, ...))
+    )
+  ))
 }
