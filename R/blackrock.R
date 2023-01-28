@@ -63,13 +63,13 @@
 #' number of rows should coincide with number of channels from section 1. Other
 #' information such as channel labels, physical connectors, pins, units, filter
 #' settings, digital-to-analog conversion are also included. Since
-#' \code{readNSx} always attempts to convert signals in 'volts' or 'millivolts'
-#' to 'microvolts', the \code{'units'} column might be different to what's
+#' \code{readNSx} always attempts to convert signals in 'volts' or 'milli-volts'
+#' to 'micro-volts', the \code{'units'} column might be different to what's
 #' actual recorded in the 'NSx' file headers.
 #'
 #' Section 3 contains partitions of continuous recording. When imported/loaded
 #' from \code{readNSx}, the digital signals are always converted to analog
-#' signals with 'microvolts' unit. Please use \code{\link{get_channel}} to
+#' signals with 'micro-volts' unit. Please use \code{\link{get_channel}} to
 #' get the channel data.
 #'
 #' @export
