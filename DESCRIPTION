@@ -20,7 +20,12 @@ Imports:
     R6
 LinkingTo: 
     cpp11
+Suggests: 
+    bit64,
+    tools,
+    testthat (>= 3.0.0)
 SystemRequirements: C++11
 Copyright: For the readNSx package: Zhengjia Wang.
 URL: http://dipterix.org/readNSx/
 BugReports: https://github.com/dipterix/readNSx/issues
+Config/testthat/edition: 3
