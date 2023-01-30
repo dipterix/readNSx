@@ -24,9 +24,15 @@ parse_uint64 <- function(x, ...) {
   # There is no R data type that can hold uint64
   # luckily, blackrock uses uint64 to store timestamp, which
   # should not exceed the half limit, and int64 should suffice
+  if(!requireNamespace("bit64")) {
+    warning("The data contains integer64 type, which is not supported by native R. Please install `bit64` package via\n  install.packages('bit64')")
+  }
   rawToInt64(x)
 }
 parse_int64 <- function(x, ...) {
+  if(!requireNamespace("bit64")) {
+    warning("The data contains integer64 type, which is not supported by native R. Please install `bit64` package via\n  install.packages('bit64')")
+  }
   rawToInt64(x)
 }
 parse_float <- function(x, ...) {
