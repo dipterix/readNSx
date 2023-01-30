@@ -204,7 +204,7 @@ read_keyvalue_pairs <- function(conn, rules, item_list, expected_items, as_data_
     re <- structure(
       lapply(keys, function(key) {
         queue <- re$get(key)
-        data.table::rbindlist(queue$as_list())
+        data.table::rbindlist(queue$as_list(), use.names = TRUE, fill = TRUE)
       }),
       names = keys
     )

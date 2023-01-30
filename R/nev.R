@@ -208,6 +208,18 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
         waveform_size <- length(value$waveform)
 
       }
+
+      if( identical(value$event, "digital_inputs") ) {
+        if(length(value$packet_insertion_reason)) {
+          value$packet_insertion_reason <- paste(
+            value$packet_insertion_reason,
+            collapse = " "
+          )
+        }
+      }
+
+      # remove `reserved`
+      value$reserved <- NULL
       queue$add( value )
     }, error = function(e) {
       warning("Unable to add spike data, reason: ", e$message)
@@ -261,7 +273,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
       nev_data$event_types <- c(nev_data$event_types, event_type)
 
-      tbl <- data.table::rbindlist(queue$as_list())
+      tbl <- data.table::rbindlist(queue$as_list(), fill = TRUE)
       tbl$time_in_seconds <- tbl$timestamp / header_basic$time_resolution_timestamp
       tbl$original_filename <- file_name
 
