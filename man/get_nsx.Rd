@@ -17,7 +17,7 @@ get_nsx(x, which, ...)
 }
 \value{
 'NSx' header information if data is found, otherwise returns
-\code{NULL}.
+\code{NULL}. See Section "'NSx' Data" in \code{\link{get_specification}}
 }
 \description{
 Load 'NSx' information from path prefix

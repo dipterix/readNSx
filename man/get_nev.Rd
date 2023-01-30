@@ -13,7 +13,8 @@ get_nev(x, ...)
 \item{...}{reserved for future use}
 }
 \value{
-'NEV' header information if \code{x} is valid, otherwise \code{NULL}
+'NEV' header information if \code{x} is valid, otherwise \code{NULL}.
+See Section "'NEV' Data" in \code{\link{get_specification}}
 }
 \description{
 Load 'NEV' information from path prefix

@@ -22,55 +22,45 @@
 #' @param partition_prefix additional prefix to the data partition; default is
 #' \code{"/part"}
 #'
-#' @returns A list of configurations, see 'Details'.
+#' @return A list of configurations, see \code{\link{get_specification}} for
+#' what's contained.
 #'
-#' @section 'NEV' Data:
-#' A 'NEV' object consists of three sections:
 #'
-#' Section 1 contains basic information such as the time-origin of all the
-#' time-stamps, the time-stamp sampling frequency, data packets sizes.
+#' @examples
 #'
-#' Section 2 is extended header containing the configurations of channels,
-#' digital signals, etc. For any data packets in section 3, there should
-#' be at least one table in this section describing the settings.
+#' # Please get your own sample data first. This package does not
+#' # provide sample data for privacy and license concerns :)
 #'
-#' section 3 is a collection of event packets such as digital signal inputs (
-#' most likely to be used at version 2.2 or by 'Ripple'), spike waveform,
-#' comments (sometimes storing epoch information), etc.
+#' if(interactive() && file.exists("sampledata.nev")) {
 #'
-#' Please be aware that while most common entries can be found across different
-#' file versions, some entries are version-specific. If you are making your
-#' script general, you need to be very careful handling these differences.
-#' For more information, please search for the data specification manual
-#' from the 'Blackrock-Microsystems' website.
+#' library(readNSx)
 #'
-#' @section 'NSx' Data:
-#' A 'NSx' file refers to the data files ending with \code{'ns1'} through
-#' \code{'ns9'}. Common types are \code{'ns2'} (sampling at 1000 Hz),
-#' \code{'ns3'} (sampling at 2000 Hz), and \code{'ns5'} (sampling at 30,000 Hz).
+#' # ---- Import for the first time --------------------------------
+#' import_nsp(
+#'   path = "sampledata.nev",
+#'   prefix = file.path(
+#'     "~/BIDSRoot/MyDataSet/sub-YAB/ses-008/ieeg/",
+#'     "sub-YAB_ses-008_task-congruency_acq-NSP1_run-01"
+#'   ),
+#'   exclude_events = "spike", partition_prefix = "/part"
+#' )
 #'
-#' A 'NSx' file also consists of three sections. Section 1 contains basic
-#' information such as the time-origin of all the time-stamps, sampling
-#' frequencies, and channel counts within the file. Please be careful that
-#' item \code{time_resolution_timestamp} is not the sampling frequency for
-#' signals. This item is the sampling frequency for time-stamp. To obtain the
-#' signal sample rate, divided \code{time_resolution_timestamp} by
-#' \code{period}. For example, \code{'ns3'} usually has time-stamp resolution
-#' \code{30,000} and \code{period=15}, hence the signal sample rate is
-#' \code{30000/15=2000Hz}.
+#' # ---- Load header information --------------------------------
+#' prefix <- "sub-YAB_ses-008_task-congruency_acq-NSP1_run-01"
+#' nev <- get_nev(prefix)
+#' ns3 <- get_nsx(prefix, which = 3)
 #'
-#' Section 2 usually contains one and only one channel table of which the
-#' number of rows should coincide with number of channels from section 1. Other
-#' information such as channel labels, physical connectors, pins, units, filter
-#' settings, digital-to-analog conversion are also included. Since
-#' \code{readNSx} always attempts to convert signals in 'volts' or 'milli-volts'
-#' to 'micro-volts', the \code{'units'} column might be different to what's
-#' actual recorded in the 'NSx' file headers.
+#' # get nev from nsx, or nsx from nev
+#' get_nev(ns3)
+#' get_nsx(nev, which = 5)
 #'
-#' Section 3 contains partitions of continuous recording. When imported/loaded
-#' from \code{readNSx}, the digital signals are always converted to analog
-#' signals with 'micro-volts' unit. Please use \code{\link{get_channel}} to
-#' get the channel data.
+#' # ---- Load channel data
+#' result <- get_channel(prefix, channel_id = 10)
+#' channel_signal <- result$channel_detail$part1$data
+#' channel_signal[]
+#'
+#' }
+#'
 #'
 #' @export
 import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
@@ -147,7 +137,8 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
 #' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or
 #' \code{'nev/nsx'} object
 #' @param ... reserved for future use
-#' @return 'NEV' header information if \code{x} is valid, otherwise \code{NULL}
+#' @return 'NEV' header information if \code{x} is valid, otherwise \code{NULL}.
+#' See Section "'NEV' Data" in \code{\link{get_specification}}
 #' @export
 get_nev <- function(x, ...) {
   UseMethod("get_nev")
@@ -207,7 +198,7 @@ get_nev.readNSx_collection <- function(x, ...) {
 #' \item{\code{'comment'}}{packet identifier 65535 as of version 3.0, available after version 2.3}
 #' }
 #' @param ... pass to other methods
-#' @returns A data frame of corresponding event type, or \code{NULL} if event
+#' @return A data frame of corresponding event type, or \code{NULL} if event
 #' is not found or invalid
 #' @export
 get_event <- function(x, event_type, ...) {
@@ -242,7 +233,7 @@ get_event <- function(x, event_type, ...) {
 #' \code{'ns3'} headers
 #' @param ... reserved for future use
 #' @return 'NSx' header information if data is found, otherwise returns
-#' \code{NULL}.
+#' \code{NULL}. See Section "'NSx' Data" in \code{\link{get_specification}}
 #' @export
 get_nsx <- function(x, which, ...) {
   UseMethod("get_nsx")

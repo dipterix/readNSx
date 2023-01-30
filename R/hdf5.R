@@ -1,6 +1,6 @@
 
-LazyH5 <- R6::R6Class(
-  classname = 'LazyH5',
+LazyH5Internal <- R6::R6Class(
+  classname = 'LazyH5Internal',
   portable = TRUE,
   cloneable = FALSE,
   private = list(
@@ -269,13 +269,13 @@ LazyH5 <- R6::R6Class(
 )
 
 #' @export
-`[.LazyH5` <- function(obj, ...){
+`[.LazyH5Internal` <- function(obj, ...){
   on.exit({obj$close()}, add = TRUE)
   obj$subset(..., envir = parent.frame())
 }
 
 #' @export
-dim.LazyH5 <- function(x){
+dim.LazyH5Internal <- function(x){
   dim_info <- x$get_dims(stay_open = FALSE)
   if(length(dim_info) == 1){
     dim_info <- NULL
@@ -284,20 +284,20 @@ dim.LazyH5 <- function(x){
 }
 
 #' @export
-length.LazyH5 <- function(x){
+length.LazyH5Internal <- function(x){
   dim_info <- x$get_dims()
   prod(dim_info)
 }
 
 #' @export
-as.array.LazyH5 <- function(x, ...){
+as.array.LazyH5Internal <- function(x, ...){
   as.array(x$subset(), ...)
 }
 
 load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
 
   re <- tryCatch({
-    re <- LazyH5$new(file_path = file, data_name = name, read_only = read_only, quiet = quiet)
+    re <- LazyH5Internal$new(file_path = file, data_name = name, read_only = read_only, quiet = quiet)
     re$open()
     re
   }, error = function(e){
@@ -313,7 +313,7 @@ load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
     # If read_only, then copy the file to local directory
     tmpf <- tempfile(fileext = 'conflict.h5')
     file.copy(file, tmpf)
-    LazyH5$new(file_path = tmpf, data_name = name, read_only = read_only)
+    LazyH5Internal$new(file_path = tmpf, data_name = name, read_only = read_only)
   })
 
   if(ram){
@@ -328,7 +328,7 @@ load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
 save_h5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
                     new_file = FALSE, ctype = NULL, quiet = FALSE, ...){
   f <- tryCatch({
-    f <- LazyH5$new(file, name, read_only = FALSE, quiet = quiet)
+    f <- LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
     f$open()
     f$close()
     f
@@ -345,7 +345,7 @@ save_h5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
       unlink(tmpf)
     }
     # Otherwise it's some weird error, or dirname not exists, expose the error
-    LazyH5$new(file, name, read_only = FALSE)
+    LazyH5Internal$new(file, name, read_only = FALSE)
   })
   on.exit({
     f$close(all = TRUE)

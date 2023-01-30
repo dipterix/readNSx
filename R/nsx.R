@@ -3,7 +3,7 @@
 read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, partition_prefix = "/part") {
 
   # get "x" in NSx
-  which_nsx = tolower(substring(path, nchar(path) - 2))
+  which_nsx <- tolower(substring(path, nchar(path) - 2))
   if(!which_nsx %in% sprintf("ns%d", seq_len(9))) {
     stop("read_nsx: path must ends with .ns1 to .ns9")
   }
