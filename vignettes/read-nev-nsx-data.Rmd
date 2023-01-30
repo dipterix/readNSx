@@ -1,61 +1,75 @@
+---
+title: "Read 'Blackrock' Neural Event & Signals"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Read 'Blackrock' Neural Event & Signals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
 
-# readNSx
-
-<!-- badges: start -->
-[![R-check](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
-
-The goal of `readNSx` is to read in `Blackrock-Microsystem` files (`.nev`, `.nsx`) and save the information to common formats that are well-supported by R, Python, Matlab.
-
-## Installation
-
-The package will be on `CRAN` soon (in a week).
-
-You can install the development version of `readNSx` from [GitHub](https://github.com/) with:
-
-``` r
-# install.packages("devtools")
-remotes::install_github("dipterix/readNSx")
-```
-
-## Import into RAVE
-
-To import the data into `RAVE (R Analysis and Visualization of iEEG)`, use the following code as an example.
-
-``` r
-readNSx::import_nsp(
-  path = "~/EMU_RAW/EMU-008_sub-YAB_task-congruency_run-01_NSP-1.nev", 
-  prefix = "~/rave_data/raw/YAB/block008", 
-  exclude_events = "spike", partition_prefix = "_part"
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  eval = FALSE,
+  comment = "#>"
 )
 ```
 
-The raw data is stored as `EMU-008_sub-YAB_task-congruency_run-01_NSP-1.nev` along with `ns3` and `ns5`. The data will be written to `RAVE` raw-data path under `~/rave_data/raw/`, as `YAB/block008_part1`, `YAB/block008_part2`, ... (one block of data may contain multiple segments of continuous recordings). The above example also avoids reading default `spike-waveforms`. Simply set `exclude_events=NULL` will enable default spike clusters. If you just want to import certain `NSx` files (for example, only `ns3`), then check `exclude_nsx` parameter.
 
-## Import to `BIDS`-like format
+## Introduction to `readNSx`
 
-`Blackrock-Microsystem` data is incompatible with `BIDS`. It lacks several critical information and require manually edits. However, you may use `import_nsp` to import into `BIDS`-like format. 
+`readNSx` is an R package that converts `Blackrock-Microsystems` files (`.nev`, `.nsx`) into commonly used formats that are compatible with `R`, `Python`, `Matlab`. The package is designed for neuroscientist who study intracranial Electroencephalography and use systems like `Blackrock`, `Ripple`, etc. Support versions are `2.2`, `2.3`, `3.0`.
+
+To install `readNSx` from `CRAN`,
+
+```r
+install.packages("readNSx")
+```
+
+To install development version
+
+```r
+install.packages("readNSx", repos = c(
+  dipterix = "https://dipterix.r-universe.dev",
+  CRAN = "https://cloud.r-project.org"))
+```
+
+
+## Basic Usage
+
+*(Well, this package has no advanced usage.)*
+
+### One-time import for the first time 
+
+If you have never converted data, use the following one-time function call to import `.nev` and `.nsx` data:
 
 ```r
 readNSx::import_nsp(
-  path = "~/EMU_RAW/EMU-008_sub-YAB_task-congruency_run-01_NSP-1.nev", 
-  prefix = file.path(
-    "~/BIDSRoot/MyDataSet/sub-YAB/ses-008/ieeg/",
-    "sub-YAB_ses-008_task-congruency_acq-NSP1_run-01"
-  ), 
-  exclude_events = "spike", partition_prefix = "/part"
+  path = "YAB_Datafile_001.nev", 
+  prefix = "YAB_Converted_001", 
+  exclude_events = "spike", 
+  partition_prefix = "/part"
 )
 ```
 
-## Load data in R
+* `path`: path to `.nev` or any `nsx` file (such as `ns3, ns5`)
+* `prefix`: path prefix of imported files (where the data will be saved)
+* `exclude_events`: events to exclude from importing; default is "spike" (spike-sorting waveform and classes)
+* `partition_prefix`: see Section "Anatomy of imported files".
 
-### Example 1: load epoch from `NEV` comment data packet events
+Please check help function `?readNSx::import_nsp`
+
+### Load imported data from R
+
+*(If you have never imported data before, please check previous sub-section first)*
+
+#### Example 1: load epoch from `NEV` comment data packet events
 
 The following example loads the trial epoch table from `NEV` comment events. The `time_in_seconds` is the second of stimuli relative to `time_origin`.
 Column `comment` is whatever comments sent by the task script (sent from `psychtoolbox` or related software that you use when collecting data).
 
 ```r
-# prefix <- "sub-YAB_ses-008_task-congruency_acq-NSP1_run-01"
+# prefix <- "YAB_Converted_001"
 nev <- readNSx::get_nev(prefix)
 
 # `time_in_seconds` is relative to time-origin
@@ -72,10 +86,10 @@ readNSx::get_event(nev, "comment")
 #> ...
 ```
 
-### Example 2: get channel information and data
+#### Example 2: get channel information and data
 
 ```r
-# prefix <- "sub-YAB_ses-008_task-congruency_acq-NSP1_run-01"
+# prefix <- "YAB_Converted_001"
 
 # Gather information of channel 10
 loaded <- readNSx::get_channel(prefix, channel_id = 10)
@@ -127,6 +141,8 @@ channel_signal[]
 
 Please use square bracket `channel_signal[]` to load the data into the memory.
 
+
+
 ## Anatomy of imported files
 
 The imported file paths will start with `prefix`, which is specified by you, my dear users. In the following demonstration, I'll use a placeholder `<prefix>` to represent your inputs.
@@ -154,6 +170,18 @@ partition_info         - Name of continuous recording within the block,
                             "meta": JSON string of channel information
                             "data": numerical signal voltage data (in `uV`)
 ```
+
+The signal data is stored at `<prefix>_ieeg/part*` by default, where `*` are positive integers representing the partition number. The `Blackrock` system allows users to pause their recordings and resume later without having to start a new block. A partition in `readNSx` represents one continuous recording within a "block". In most of cases, when there is no pause within a block, you will see only one partition. In some experimental settings, there could be one or more pauses, `readNSx` will store each continuous recordings in separate folders to make sure each partition is always continuous. The start time of the partitions will be stored in `partition_info.tsv`.
+
+Please be aware that partition pattern `<prefix>_ieeg/part*` is not fixed. You can change the pattern via parameter `partition_prefix` when importing the data. For example, `partition_prefix="_part` will create partition files within directory `<prefix>_ieeg_part*`.
+
+When `readNSx` stores the data, the channels are saved individually. For example, channel `1 (LA-2)` and `2 (LA-2)` are stored in separate `HDF5` files. This arrangement is out of the file-size and computational considerations:
+
+* When storing all channels together, the file size will become super big. Reading one channel might resulting in reading the whole file (if handled poorly, or if using network drive)
+* In some cases, `HDF5` files can only have one file pointers (file locked by some software). This could limit batch computing algorithms that can be paralleled at channel-level
+* My personal research requires fast approach to copy or share data for quick inspection/analysis/visualizations (don't want to move large files around)
+
+### File formats
 
 The following file types will be generated:
 
