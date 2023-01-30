@@ -30,7 +30,7 @@
     
     <a class="navbar-brand me-2" href="index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,15 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
   <a class="nav-link" href="reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="articles/read-nev-nsx-data.html">Read 'Blackrock' Neural Event &amp; Signals</a>
+  </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="news/index.html">Changelog</a>
 </li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
@@ -184,7 +193,7 @@
 <div class="section level2">
 <h2 id="anatomy-of-imported-files">Anatomy of imported files<a class="anchor" aria-label="anchor" href="#anatomy-of-imported-files"></a>
 </h2>
-<p>The imported file paths will start with <code>prefix</code>. In the following context, I’ll use <code>&lt;prefix&gt;</code> to represent specified in the function <code>import_nsp</code>.</p>
+<p>The imported file paths will start with <code>prefix</code>, which is specified by you, my dear users. In the following demonstration, I’ll use a placeholder <code>&lt;prefix&gt;</code> to represent your inputs.</p>
 <pre><code>partition_info         - Name of continuous recording within the block, 
                           sample rates, starting time per partition per NSx
 &lt;prefix&gt;_scans         - Basic information for current block

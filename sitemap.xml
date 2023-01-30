@@ -7,10 +7,19 @@
     <loc>http://dipterix.org/readNSx/LICENSE-text.html</loc>
   </url>
   <url>
+    <loc>http://dipterix.org/readNSx/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/readNSx/articles/read-nev-nsx-data.html</loc>
+  </url>
+  <url>
     <loc>http://dipterix.org/readNSx/authors.html</loc>
   </url>
   <url>
     <loc>http://dipterix.org/readNSx/index.html</loc>
+  </url>
+  <url>
+    <loc>http://dipterix.org/readNSx/news/index.html</loc>
   </url>
   <url>
     <loc>http://dipterix.org/readNSx/reference/get_channel.html</loc>

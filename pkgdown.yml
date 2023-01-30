@@ -1,8 +1,9 @@
 pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
-articles: {}
-last_built: 2023-01-29T03:55Z
+articles:
+  read-nev-nsx-data: read-nev-nsx-data.html
+last_built: 2023-01-30T04:19Z
 urls:
   reference: http://dipterix.org/readNSx/reference
   article: http://dipterix.org/readNSx/articles
