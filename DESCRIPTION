@@ -25,7 +25,8 @@ Suggests:
     tools,
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    spelling
 SystemRequirements: C++11, HDF5 (>= 1.8.13), little-endian platform
 NeedsCompilation: yes
 Copyright: For the readNSx package: Zhengjia Wang.
