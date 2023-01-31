@@ -1,12 +1,12 @@
 Package: readNSx
-Title: Read 'Blackrock' Files ('NEV', 'NSx')
+Title: Read 'Blackrock-Microsystems' Files ('NEV', 'NSx')
 Version: 0.0.1
 Authors@R: 
     person(given = "Zhengjia", family = "Wang", 
       email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
-Description: Loads 'Blackrock' neural signal data into the memory, provides
-    utility tools to exports the data into common formats, for example,
-    plain-text 'tsv' tables for headers and 'HDF5' for data matrices.
+Description: Loads 'Blackrock' <https://blackrockneurotech.com> neural signal 
+    data files into the memory, provides utility tools to extract the data into 
+    common formats such as plain-text 'tsv' and 'HDF5'.
 License: MPL-2.0 | file LICENSE
 Language: en-US
 Encoding: UTF-8
