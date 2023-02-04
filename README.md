@@ -65,4 +65,10 @@ readNSx::import_nsp(
 
 ## License
 
-`readNSx` is released under `MPL-2.0` license with copyright information. Please include the copyright information when redistributing. The source code is freely available for educational use. Some components might subject to `Blackrock` copyright. Please contact `Blackrock` for permissions if your software is not free.
+(This is not legal notice. Please seek for professional advice)
+
+The source code of `readNSx` is freely available for educational use. Some components might subject to `Blackrock` copyright. Please contact `Blackrock` for permissions if your software is not free.
+
+`readNSx` is released under `MPL-2.0` license with copyright information. To link `readNSx` in your project (e.g. via R `library(readNSx)` function), you do NOT need to change your license (even for proprietary projects, this makes me prefer `MPL-2.0` to other strong copyleft licenses as `GPL`) other than including the copyright information when redistributing (see `LICENSE` file). 
+
+In some rare cases, if you redistribute source code, either modified or as-is outside of your organization, you must release the code under `MPL-2.0` license. The license file explicitly states that the source code is incompatible with any other license (including `GPL`, see `Exhibit B - “Incompatible With Secondary Licenses” Notice` in the license file).
