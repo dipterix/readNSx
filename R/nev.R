@@ -1,9 +1,7 @@
 read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL ) {
   # DIPSAUS DEBUG START
-  # path <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/raw/YEK/EMU-057_subj-YEK_task-LOCALIZER_run-01_NSP-1.nev'
-  # prefix <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-YEK/ses-057/ieeg/sub-YEK_ses-057_task-localizer_acq-NSP1_run-01'
-  # path <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/raw/YDY/block058/EMU-058_subj-YDY_task-noisyAV_run-06_NSP-2.nev'
-  # prefix <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-YDY/ses-058/ieeg/sub-YDY_ses-058_task-noisyAV_acq-NSP2_run-06'
+  # path <- '~/Downloads/BLOCK016_SpeechModalityLocalizer/PAV020_Datafile_016.nev'
+  # prefix <- '~/Downloads/BLOCK016_SpeechModalityLocalizer/junk'
   # ftype <- get_file_type(path = path)
   # spec <- get_specification(ftype$version, "nev")
   # exclude_events = "1-30000"
