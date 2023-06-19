@@ -27,7 +27,7 @@ Suggests:
     knitr,
     rmarkdown,
     spelling
-SystemRequirements: HDF5 (>= 1.8.13), little-endian platform
+SystemRequirements: C++17, HDF5 (>= 1.8.13), little-endian platform
 NeedsCompilation: yes
 Copyright: For the readNSx package: Zhengjia Wang.
 URL: http://dipterix.org/readNSx/
