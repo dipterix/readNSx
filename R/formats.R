@@ -45,8 +45,10 @@ format.readNSx_nev_basic_header <- function(x, ...) {
   paste(c(
     "Basic header information (NEV):",
     sprintf("  Internal type: %s", x$file_type),
+    sprintf("  File specification: %s", paste(x$file_spec, collapse = ".")),
     sprintf("  Application: %s", x$application_to_create_file),
-    sprintf("  Highest sample rate: %.2f Hz", x$time_resolution_samples),
+    sprintf("  Event sample rate: %.2f Hz", x$time_resolution_timestamp),
+    sprintf("  Data sample rate: %.2f Hz", x$time_resolution_samples),
     sprintf("  Data packet size: %d B/packet", x$bytes_in_data_packet),
     sprintf("  Time origin: %04d-%02d-%02d %02d:%02d:%02d %03.0fms",
             ts[[1]], ts[[2]], ts[[4]], ts[[5]], ts[[6]], ts[[7]], ts[[8]])
@@ -99,6 +101,7 @@ format.readNSx_nsx_basic_header <- function(x, ...) {
   s <- c(
     "Basic header information (NSx):",
     sprintf("  Internal type: %s", x$file_type),
+    sprintf("  File specification: %s", paste(x$file_spec, collapse = ".")),
     sprintf("  Channel count: %s", x$channel_count),
     sprintf("  Sample rate: %.0f Hz", 30000 / x$period),
     sprintf("  Time origin: %04d-%02d-%02d %02d:%02d:%02d %03.0fms",

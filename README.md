@@ -4,7 +4,7 @@
 <!-- badges: start -->
 [![license](https://img.shields.io/badge/license-MPL--2.0%20%2B%20file%20LICENSE-blue)](https://github.com/dipterix/readNSx/blob/main/LICENSE)
 [![CRAN status](https://www.r-pkg.org/badges/version/readNSx)](https://CRAN.R-project.org/package=readNSx)
-[![R-check](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dipterix/readNSx/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of `readNSx` is to read in `Blackrock-Microsystem` files (`.nev`, `.nsx`) and save the information to common formats that are well-supported by R, Python, Matlab.

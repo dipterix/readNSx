@@ -37,6 +37,13 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     class = c("readNSx_nev_basic_header", "readNSx_printable")
   )
 
+  # Fixing NEV 3.0 file bug
+  if(identical(paste(header_basic$file_spec, collapse = "."), "3.0")) {
+    if( header_basic$time_resolution_timestamp < 30000 ) {
+      header_basic$time_resolution_timestamp <- 30000
+    }
+  }
+
   # Export header_basic as _scans
   tbl <- data.frame(
     filename = sprintf("%s_ieeg", export_filebase),
