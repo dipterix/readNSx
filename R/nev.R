@@ -1,7 +1,7 @@
 read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL ) {
   # DIPSAUS DEBUG START
-  # path <- '~/Downloads/BLOCK016_SpeechModalityLocalizer/PAV020_Datafile_016.nev'
-  # prefix <- '~/Downloads/BLOCK016_SpeechModalityLocalizer/junk'
+  # path = "/Users/dipterix/rave_data/raw_dir/PAV023/BLOCK024_mTurkWords_run1/PAV023_Datafile_024.nev"
+  # prefix = "/Users/dipterix/rave_data/raw_dir/PAV023/BLOCK024_mTurkWords_run1/extraction/data"
   # ftype <- get_file_type(path = path)
   # spec <- get_specification(ftype$version, "nev")
   # exclude_events = "1-30000"

@@ -186,6 +186,8 @@ append_table <- function(old_tbl, new_tbl, index_column = NULL, obsolete_values 
 append_table_rds <- function(
     path, new_tbl, index_column = NULL, obsolete_values = NULL, save_tsv = TRUE) {
 
+  if(!is.data.frame(new_tbl) || nrow(new_tbl) == 0)  { return() }
+
   if(file.exists(path)) {
     old_tbl <- tryCatch({
       readRDS(path)
@@ -201,8 +203,15 @@ append_table_rds <- function(
   saveRDS(combined_tbl, file = path)
 
   if( save_tsv ) {
-    tsv_path <- sprintf("%s.tsv", gsub(".rds", "", x = path, ignore.case = TRUE))
-    utils::write.table(file = tsv_path, x = combined_tbl, row.names = FALSE, sep = "\t")
+    tsv_path <- sprintf("%s.tsv", gsub("\\.rds$", "", x = path, ignore.case = TRUE))
+    utils::write.table(
+      file = tsv_path,
+      x = combined_tbl,
+      row.names = FALSE,
+      sep = "\t",
+      append = FALSE,
+      col.names = TRUE
+    )
   }
 
   invisible(combined_tbl)
