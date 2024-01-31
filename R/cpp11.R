@@ -35,3 +35,11 @@ rawToFloat <- function(x) {
 rawToString <- function(x) {
   .Call(`_readNSx_rawToString`, x)
 }
+
+readNSxDataPacket30 <- function(filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept) {
+  .Call(`_readNSx_readNSxDataPacket30`, filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept)
+}
+
+readNSxDataPacket2x <- function(filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept) {
+  .Call(`_readNSx_readNSxDataPacket2x`, filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept)
+}

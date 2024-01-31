@@ -4,7 +4,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   # prefix = "/Users/dipterix/rave_data/raw_dir/PAV023/BLOCK024_mTurkWords_run1/extraction/data"
   # ftype <- get_file_type(path = path)
   # spec <- get_specification(ftype$version, "nev")
-  # exclude_events = "1-30000"
+  # exclude_events = "spike"
 
   if(missing(spec) || is.null(spec)) {
     ftype <- get_file_type(path = path)
