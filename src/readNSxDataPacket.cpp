@@ -1,5 +1,6 @@
 #include <fstream>
 #include <vector>
+#include <cstring>
 #include <cpp11.hpp>
 using namespace cpp11;
 namespace writable = cpp11::writable;
