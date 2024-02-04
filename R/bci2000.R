@@ -157,12 +157,12 @@ read_bci2000_header <- function(file) {
     section <- strsplit(section, ":", fixed = TRUE)[[1]]
 
     li <- parameters
-    for(nm in section[-length(section)]) {
+    for(nm in section) {
       nm <- bciStrDecode(nm, nil = "")
       li[[nm]] %?<-% new.env(parent = emptyenv())
       li <- li[[nm]]
     }
-    li[[section[[length(section)]]]] <- param
+    li[[ param$name ]] <- param
   })
 
   as_list <- function(x) {
