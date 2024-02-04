@@ -1,26 +1,9 @@
 #include <fstream>
 #include <vector>
-#include <cstring>
 #include <cpp11.hpp>
+#include "common.h"
 using namespace cpp11;
 namespace writable = cpp11::writable;
-
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using `cpp11::cpp_source()`.
-
-// Learn more about cpp11 at:
-//
-//   https://cpp11.r-lib.org/index.html
-
-template <typename A>
-void convertBuffer(A* ptr, char* bufptr, const int& n) {
-
-    int esize = sizeof( A ) / sizeof( char );
-    for(int i = 0; i < n; i++, ptr++, bufptr += esize ) {
-        std::memcpy(ptr, bufptr, esize);
-    }
-}
-
 
 // A is uint64_t or uint32_t (timestamp)
 // B is uint32_t indicating number of data points
@@ -87,11 +70,11 @@ SEXP readNSxDataPacket(const std::string& filePath,
 
             remainBytes -= overheadSize;
 
-            convertBuffer(&currentTime_, ptrChrBuf + typeSize, 1);
+            readnsx::convertBuffer(&currentTime_, ptrChrBuf + typeSize, 1);
             currentTime = ((double) currentTime_) / 1000000000.0;
             // ::Rprintf("Package Type: %d, time: %lld\n", ptrChrBuf[0], currentTime_);
 
-            convertBuffer(&nPoints, ptrChrBuf + (typeSize + timeSize), 1);
+            readnsx::convertBuffer(&nPoints, ptrChrBuf + (typeSize + timeSize), 1);
             // ::Rprintf("  Reading... %lld x %lld x %lld. Current ntime=%lld, ndata=%lld\n", nPoints, nChannels, elemSize, timeStamps.size(), signals.size());
             nPointsInBytes = (size_t) ( nPoints *elemSize * nChannels );
 

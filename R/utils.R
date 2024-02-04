@@ -242,3 +242,45 @@ channel_filename <- function(channel_id, channel_label) {
   channel_label[sel] <- sprintf("%s-%03d", channel_label[sel], channel_id[sel])
   sprintf("%s.h5", channel_label)
 }
+
+str_match <- function(x, pattern, ...) {
+
+  idxs <- gregexpr(pattern = pattern, text = x, ...)
+
+  unname(sapply(seq_along(x), function(ii) {
+    s <- x[[ii]]
+    idx <- idxs[[ii]]
+    len <- attr(idx, "match.length")
+    substring(s, idx, idx + len - 1L)
+  }, USE.NAMES = FALSE, simplify = FALSE))
+
+}
+
+`%!!<-%` <- function(lhs, value) {
+  env <- parent.frame()
+  expr <- substitute(lhs)
+  isnull <- tryCatch({
+    lhs <- eval(expr, envir = env)
+    is.null(lhs)
+  }, error = function(e) {
+    return(TRUE)
+  })
+  if (isnull) { return() }
+  if(is.function(value)) {
+    value <- value(lhs)
+  }
+  eval(as.call(list(quote(`<-`), expr, value)), envir = env)
+}
+
+`%?<-%` <- function (lhs, value) {
+  env <- parent.frame()
+  lhs <- substitute(lhs)
+  isnull <- tryCatch({
+    is.null(eval(lhs, envir = env))
+  }, error = function(e) {
+    return(TRUE)
+  })
+  if (isnull) {
+    eval(as.call(list(quote(`<-`), lhs, value)), envir = env)
+  }
+}
