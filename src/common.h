@@ -1,6 +1,8 @@
 #ifndef READNSX_COMMON_H
 #define READNSX_COMMON_H
 
+#include <cstring>
+
 namespace readnsx {
 
 template <typename A>
