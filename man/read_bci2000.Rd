@@ -21,16 +21,16 @@ Read \code{'BCI2000'} recording data
 \examples{
 
 # Package comes with sample data
-file <- system.file("samples", "bci2000_sample.dat",
-                    package = "readNSx")
+file <- system.file("samples", "bci2000_sample.dat", package = "readNSx")
 result <- read_bci2000(file)
 
 print(result)
 
-# time-stamp in seconds
-source_time <- result$states$data[, "SourceTime"] / 1000
+# Notive: v1.0 and v1.1 are different, but all in `Source` section
+# sample rate
+result$parameters$Source$SamplingRate$value
 
-# Signal data 500 time-points x 64 channels
+# Signal data 64 channels x 500 time-points
 dim(result$signals)
 
 }

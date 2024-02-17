@@ -5,50 +5,6 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// bciStrDecode.cpp
-std::string bciStrDecode(const std::string& x, const std::string& nil);
-extern "C" SEXP _readNSx_bciStrDecode(SEXP x, SEXP nil) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(bciStrDecode(cpp11::as_cpp<cpp11::decay_t<const std::string&>>(x), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(nil)));
-  END_CPP11
-}
-// bciStrDecode.cpp
-SEXP createBCIObject(const std::string & cls, const SEXP & config);
-extern "C" SEXP _readNSx_createBCIObject(SEXP cls, SEXP config) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(createBCIObject(cpp11::as_cpp<cpp11::decay_t<const std::string &>>(cls), cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(config)));
-  END_CPP11
-}
-// bciStrDecode.cpp
-void printBCIObject(const SEXP & s);
-extern "C" SEXP _readNSx_printBCIObject(SEXP s) {
-  BEGIN_CPP11
-    printBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s));
-    return R_NilValue;
-  END_CPP11
-}
-// bciStrDecode.cpp
-std::string formatBCIObject(const SEXP & s);
-extern "C" SEXP _readNSx_formatBCIObject(SEXP s) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(formatBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s)));
-  END_CPP11
-}
-// bciStrDecode.cpp
-SEXP maturalizeBCIObject(const SEXP & s);
-extern "C" SEXP _readNSx_maturalizeBCIObject(SEXP s) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(maturalizeBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s)));
-  END_CPP11
-}
-// bciStrDecode.cpp
-void parseBCIDataRaw(const SEXP & s, const SEXP& x, bool reset);
-extern "C" SEXP _readNSx_parseBCIDataRaw(SEXP s, SEXP x, SEXP reset) {
-  BEGIN_CPP11
-    parseBCIDataRaw(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s), cpp11::as_cpp<cpp11::decay_t<const SEXP&>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(reset));
-    return R_NilValue;
-  END_CPP11
-}
 // rawToSEXP.cpp
 SEXP rawToUInt8(SEXP x);
 extern "C" SEXP _readNSx_rawToUInt8(SEXP x) {
@@ -112,6 +68,57 @@ extern "C" SEXP _readNSx_rawToString(SEXP x) {
     return cpp11::as_sexp(rawToString(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// readBCI2R.cpp
+void printBCIObject(const SEXP & s);
+extern "C" SEXP _readNSx_printBCIObject(SEXP s) {
+  BEGIN_CPP11
+    printBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s));
+    return R_NilValue;
+  END_CPP11
+}
+// readBCI2R.cpp
+std::string formatBCIObject(const SEXP & s);
+extern "C" SEXP _readNSx_formatBCIObject(SEXP s) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(formatBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s)));
+  END_CPP11
+}
+// readBCI2R.cpp
+SEXP maturalizeBCIObject(const SEXP & s);
+extern "C" SEXP _readNSx_maturalizeBCIObject(SEXP s) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(maturalizeBCIObject(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s)));
+  END_CPP11
+}
+// readBCI2R.cpp
+std::string bciStrDecode(const std::string& x, const std::string& nil);
+extern "C" SEXP _readNSx_bciStrDecode(SEXP x, SEXP nil) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(bciStrDecode(cpp11::as_cpp<cpp11::decay_t<const std::string&>>(x), cpp11::as_cpp<cpp11::decay_t<const std::string&>>(nil)));
+  END_CPP11
+}
+// readBCI2R.cpp
+SEXP createBCIObject(const std::string & cls, const SEXP & config);
+extern "C" SEXP _readNSx_createBCIObject(SEXP cls, SEXP config) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(createBCIObject(cpp11::as_cpp<cpp11::decay_t<const std::string &>>(cls), cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(config)));
+  END_CPP11
+}
+// readBCI2R.cpp
+void parseBCIDataRaw(const SEXP & s, const SEXP& x, bool reset);
+extern "C" SEXP _readNSx_parseBCIDataRaw(SEXP s, SEXP x, SEXP reset) {
+  BEGIN_CPP11
+    parseBCIDataRaw(cpp11::as_cpp<cpp11::decay_t<const SEXP &>>(s), cpp11::as_cpp<cpp11::decay_t<const SEXP&>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(reset));
+    return R_NilValue;
+  END_CPP11
+}
+// readBCI2R.cpp
+SEXP parseBCIParamDef(const std::string & statement);
+extern "C" SEXP _readNSx_parseBCIParamDef(SEXP statement) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(parseBCIParamDef(cpp11::as_cpp<cpp11::decay_t<const std::string &>>(statement)));
+  END_CPP11
+}
 // readNSxDataPacket.cpp
 SEXP readNSxDataPacket30(const std::string& filePath, const uint32_t& nBytes, const double& sampleRate, const int& nChannels, const uint32_t& skipBytes, const double& slope, const double& intercept);
 extern "C" SEXP _readNSx_readNSxDataPacket30(SEXP filePath, SEXP nBytes, SEXP sampleRate, SEXP nChannels, SEXP skipBytes, SEXP slope, SEXP intercept) {
@@ -134,6 +141,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_readNSx_formatBCIObject",     (DL_FUNC) &_readNSx_formatBCIObject,     1},
     {"_readNSx_maturalizeBCIObject", (DL_FUNC) &_readNSx_maturalizeBCIObject, 1},
     {"_readNSx_parseBCIDataRaw",     (DL_FUNC) &_readNSx_parseBCIDataRaw,     3},
+    {"_readNSx_parseBCIParamDef",    (DL_FUNC) &_readNSx_parseBCIParamDef,    1},
     {"_readNSx_printBCIObject",      (DL_FUNC) &_readNSx_printBCIObject,      1},
     {"_readNSx_rawToFloat",          (DL_FUNC) &_readNSx_rawToFloat,          1},
     {"_readNSx_rawToInt16",          (DL_FUNC) &_readNSx_rawToInt16,          1},

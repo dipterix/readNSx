@@ -10,12 +10,52 @@ format.BCIObjClass <- function(x, ...) {
 }
 
 #' @export
-print.BCIData <- function(x, ...) {
+print.BCIData <- function(x, indent = "", ...) {
   if(is.character(x$summary)) {
-    cat(x$summary, sep = "\n")
+    summary <- x$summary
+    if(nzchar(indent)) {
+      summary <- sprintf("%s%s", indent, strsplit(paste(x$summary, collapse = "\n"), "\n")[[1]])
+    }
+    cat(summary, sep = "\n")
     return(invisible(x))
   }
   NextMethod(x)
+}
+
+parse_bci_param_def <- function(s) {
+  sel <- grepl("^[^ ]{1,} [^ ]{1,} [^ ]{1,}= ", s)
+  n <- length(s)
+  lapply(seq_len(n), function(ii) {
+    if(!sel[[ii]]) { return(NULL) }
+    params <- parseBCIParamDef(s[[ii]])
+    section <- strsplit(params$section, ":", fixed = TRUE)[[1]]
+    section <- unname(sapply(section, bciStrDecode, ""))
+    params$full_section <- section
+    params$section <- section
+    params$summary <- c(
+      sprintf("[BCIParamDef: %s]%s", params$name,
+              paste(utils::capture.output(utils::str(params$value, indent.str = "  ")), collapse = "\n"))
+    )
+    class(params) <- c("BCIData.Parameter", "BCIData")
+    return(params)
+  })
+}
+
+#' @export
+format.BCIData.Parameter.List <- function(x, indent = "", ...) {
+  nms <- names(x)
+  paste(
+    c(
+      sprintf("%s<BCIParameters>", indent),
+      sprintf("%s  - %s", indent, nms)
+    ),
+    collapse = "\n"
+  )
+}
+
+#' @export
+print.BCIData.Parameter.List <- function(x, ...) {
+  cat("%s\n", format(x, ...))
 }
 
 #' @name read_bci2000
@@ -25,22 +65,26 @@ print.BCIData <- function(x, ...) {
 #' @examples
 #'
 #' # Package comes with sample data
-#' file <- system.file("samples", "bci2000_sample.dat",
-#'                     package = "readNSx")
+#' file <- system.file("samples", "bci2000_sample.dat", package = "readNSx")
 #' result <- read_bci2000(file)
 #'
 #' print(result)
 #'
-#' # time-stamp in seconds
-#' source_time <- result$states$data[, "SourceTime"] / 1000
+#' # Notive: v1.0 and v1.1 are different, but all in `Source` section
+#' # sample rate
+#' result$parameters$Source$SamplingRate$value
 #'
-#' # Signal data 500 time-points x 64 channels
+#' # Signal data 64 channels x 500 time-points
 #' dim(result$signals)
 #'
 #' @export
 read_bci2000_header <- function(file) {
-  s <- readLines(file, n = 1)
-  s <- trimws(str_match(s, "(^|\\ )([^=\\ ]+)=[\\ ]{0,1}([^=\\ ]+)")[[1]])
+  # DIPSAUS DEBUG START
+  # file <- "~/Dropbox (PennNeurosurgery)/RAVE/Samples/ECoGAnalysisTraining/data/bci2000_datafile.dat"
+  # file <- file <- "/Users/dipterix/Dropbox (PennNeurosurgery)/RAVE/Samples/ECoGAnalysisTraining/BCI2000Tools/mex/testdata.dat"
+
+  meta <- readLines(file, n = 1)
+  s <- trimws(str_match(meta, "(^|\\ )([^=\\ ]+)=[\\ ]{0,1}([^=\\ ]+)")[[1]])
   s <- simplify2array(strsplit(s, split = "=[ ]{0,1}", fixed = FALSE))
   basic_headers <- structure(as.list(s[2, ]), names = tolower(s[1, ]))
   basic_header_names <- names(basic_headers)
@@ -97,64 +141,12 @@ read_bci2000_header <- function(file) {
   }), recursive = FALSE, use.names = TRUE)
 
   # Section DataType Name= Value DefaultValue LowRange HighRange // Comment
-  param_defs <- headers[ - seq_len(idx2) ]
-  param_defs <- param_defs[grepl("^.*= .*$", param_defs)]
-
-  param_defs <- lapply(param_defs, function(x) {
-    # message(x)
-    x_ <- x
-    x <- strsplit(x, "= ", fixed = TRUE)[[1]]
-    # x <- strsplit(param_defs, "= ", fixed = TRUE)[[1]]
-    pre <- strsplit(trimws(x[[1]]), " ", fixed = TRUE)[[1]]
-    val <- strsplit(trimws(x[[2]]), "//", fixed = TRUE)[[1]]
-    data_type <- pre[[2]]
-
-    if(length(val) > 1) {
-      comments <- paste(val[-1], collapse = "//")
-      val <- val[[1]]
-    } else {
-      comments <- ""
-    }
-
-    # parser1 <- function(val, f = NULL, nil = " ", names = NULL) {
-    #   val <- bciStrDecode(x = trimws(val), nil = nil)
-    #   val <- strsplit(val, " ", fixed = TRUE)[[1]]
-    #   if(is.function( f )) {
-    #     val <- f(val)
-    #   }
-    #   val
-    # }
-    # tryCatch({
-    #   val <- switch(
-    #     substr(data_type, 1, 3),
-    #
-    #     Value DefaultValue LowRange HighRange
-    #     "int" = {
-    #       parser1(val, as.integer, nil = " ", names = c("value", "default", "low_range", "high_range"))
-    #     },
-    #     {
-    #       cat(data_type, ":", val, "\n")
-    #       val
-    #     }
-    #   )
-    # }, warning = function(e) {
-    #   message(data_type, ": ", val)
-    # })
-
-    list(
-      raw = x_,
-      section = pre[[1]],
-      data_type = data_type,
-      name = pre[[3]],
-      comments = comments,
-      values = val
-    )
-  })
-
+  param_defs <- parse_bci_param_def(headers[ - seq_len(idx2) ])
+  param_defs <- param_defs[!vapply(param_defs, is.null, FALSE)]
   parameters <- new.env(parent = emptyenv())
   lapply(param_defs, function(param) {
+    if(is.null(param)) { return() }
     section <- param$section
-    section <- strsplit(section, ":", fixed = TRUE)[[1]]
 
     li <- parameters
     for(nm in section) {
@@ -163,6 +155,7 @@ read_bci2000_header <- function(file) {
       li <- li[[nm]]
     }
     li[[ param$name ]] <- param
+    return()
   })
 
   as_list <- function(x) {
@@ -173,12 +166,13 @@ read_bci2000_header <- function(file) {
       } else {
         return(x[[nm]])
       }
-    }), names = nms)
+    }), names = nms, class = "BCIData.Parameter.List")
   }
 
   parameters <- as_list(parameters)
 
   list(
+    meta = meta,
     basic = basic_headers,
     state_definitions = state_defs,
     parameter_definitions = parameters
@@ -218,15 +212,16 @@ read_bci2000 <- function(file) {
   parseBCIDataRaw(data_parser, data, TRUE)
   parsed <- maturalizeBCIObject(data_parser)
 
-  parsed_summary <- format(data_parser)
-
   parsed_summary <- c(
     "<BCI2000 Recording Data>",
-    "[Definitions]:",
-    sprintf("  %s", strsplit(parsed_summary, "[\r]{0,1}\n")[[1]]),
+    header$meta,
+    "[State Definitions]:",
+    sprintf("  %s", strsplit(format(data_parser), "[\r]{0,1}\n")[[1]]),
+    "[Parameter Definitions]",
+    format(header$parameter_definitions, indent = "  "),
     "[Enclosing Items]:",
     "  $header_basic          - BCI2000 basic header information",
-    "  $parameter_definitions - Recording parameters",
+    "  $parameters            - Recording parameters",
     "  $states                - A list containing state definitions and state data",
     "  $signals               - Time x Channel signal matrix"
   )
@@ -237,14 +232,14 @@ read_bci2000 <- function(file) {
   structure(
     list(
       header_basic = header$basic,
-      parameter_definitions = header$parameter_definitions,
+      parameters = header$parameter_definitions,
 
       states = list(
         definitions = header$state_definitions,
-        data = structure(t(parsed$states), dimnames = list(NULL, names(header$state_definitions)))
+        data = structure(parsed$states, dimnames = list(names(header$state_definitions), NULL))
       ),
 
-      signals = t(parsed$data),
+      signals = parsed$data,
       summary = parsed_summary
     ),
     class = c("BCIData.Recording", "BCIData")
