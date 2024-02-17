@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.2.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,13 +79,13 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Package comes with sample data</span></span></span>
-<span class="r-in"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"samples"</span>, <span class="st">"bci2000_sample.dat"</span>,</span></span>
-<span class="r-in"><span>                    package <span class="op">=</span> <span class="st">"readNSx"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"samples"</span>, <span class="st">"bci2000_sample.dat"</span>, package <span class="op">=</span> <span class="st">"readNSx"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">read_bci2000</span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;BCI2000 Recording Data&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [Definitions]:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> HeaderLen=  8189 SourceCh= 64 StatevectorLen= 15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [State Definitions]:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;BCI2000 State Definitions&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     [BCIStateDef: Running	] Len=8, ByteLoc=0, BitLoc=0, DefaultValue=0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     [BCIStateDef: Active	] Len=8, ByteLoc=1, BitLoc=0, DefaultValue=0</span>
@@ -104,18 +104,31 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of Channels: 64</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Each Sample Contains: 143 Bytes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     # of Samples read: 500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [Parameter Definitions]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;BCIParameters&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Storage</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Filtering</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Visualize</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Source</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - UsrTask</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - System</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - save_bcidat</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - Statistics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     - MEMFilter</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [Enclosing Items]:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   $header_basic          - BCI2000 basic header information</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   $parameter_definitions - Recording parameters</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   $parameters            - Recording parameters</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   $states                - A list containing state definitions and state data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   $signals               - Time x Channel signal matrix</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># time-stamp in seconds</span></span></span>
-<span class="r-in"><span><span class="va">source_time</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">states</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="st">"SourceTime"</span><span class="op">]</span> <span class="op">/</span> <span class="fl">1000</span></span></span>
+<span class="r-in"><span><span class="co"># Notive: v1.0 and v1.1 are different, but all in `Source` section</span></span></span>
+<span class="r-in"><span><span class="co"># sample rate</span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">parameters</span><span class="op">$</span><span class="va">Source</span><span class="op">$</span><span class="va">SamplingRate</span><span class="op">$</span><span class="va">value</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 160</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Signal data 500 time-points x 64 channels</span></span></span>
+<span class="r-in"><span><span class="co"># Signal data 64 channels x 500 time-points</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">signals</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 500  64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  64 500</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
