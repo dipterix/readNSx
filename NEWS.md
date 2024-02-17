@@ -1,3 +1,7 @@
+# readNSx 0.0.3
+
+* Added `read_bci2000` to read `BCI2000` data
+
 # readNSx 0.0.2
 
 * Added support: `NEV/NSx` 3.0 specification
