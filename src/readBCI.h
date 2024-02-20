@@ -6,6 +6,7 @@
 #include <string>
 #include <stdexcept>
 #include <cpp11.hpp>
+// #include <cstring>  // included in common.h
 #include "common.h"
 
 namespace readnsx {
@@ -563,12 +564,16 @@ public:
         // ::Rprintf("Current data size: %llu", data.size());
 
         size_t ii = 0, jj = 0;
-        T* ptrData = (T*) ptr;
+        T buf = 0;
+        char* ptr2 = ptr;
         for( ii = 0; ii < nSamples; ii++, ptr += rowBytes ) {
 
-            ptrData = (T*) ptr;
-            for( jj = 0 ; jj < this->nChannels; jj++, ptrData++ ) {
-                data.push_back( *ptrData );
+            ptr2 = ptr;
+            for( jj = 0 ; jj < this->nChannels; jj++, ptr2 += elemSize ) {
+                // avoid UBSAN check errors when forcing converting *char to
+                // *uint16_t as the byte length is considered
+                std::memcpy(&buf, ptr2, elemSize);
+                data.push_back( buf );
             }
             this->stateParser->parse( ptr + this->nChannels * elemSize );
         }
