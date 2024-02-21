@@ -1,3 +1,7 @@
+# readNSx 0.0.4
+
+* Fixed a `ASAN/UBSAN` error in `read_bci2000`
+
 # readNSx 0.0.3
 
 * Added `read_bci2000` to read `BCI2000` data
