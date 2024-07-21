@@ -1,54 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>http://dipterix.org/readNSx/404.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/articles/read-nev-nsx-data.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/authors.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/index.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/news/index.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_channel.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_event.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_file_type.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_nev.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_nsp.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_nsx.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/get_specification.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/import_nsp.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>http://dipterix.org/readNSx/reference/read_bci2000.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>http://dipterix.org/readNSx/404.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/LICENSE-text.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/articles/index.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/articles/read-nev-nsx-data.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/authors.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/index.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/news/index.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_channel.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_event.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_file_type.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_nev.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_nsp.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_nsx.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/get_specification.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/import_nsp.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/index.html</loc></url>
+<url><loc>http://dipterix.org/readNSx/reference/read_bci2000.html</loc></url>
 </urlset>
+
