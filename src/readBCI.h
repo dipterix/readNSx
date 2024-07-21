@@ -645,12 +645,29 @@ inline S* getBCIObjPointer(SEXP s, bool checkZero=true)  // internal function
         ::Rf_error("not an external pointer");
 
     SEXP tag = R_ExternalPtrTag(s);  // our convention, this can be anything
-    if (TYPEOF(tag) != CHARSXP || strcmp(CHAR(tag), "BCIObjClass") != 0)
+
+    bool isBCI2000Object = false;
+
+    if( TYPEOF(tag) == CHARSXP ) {
+        if( strcmp(CHAR(tag), "BCIObjClass") == 0 ) {
+            isBCI2000Object = true;
+        }
+    } else if ( TYPEOF(tag) == STRSXP && XLENGTH( tag ) >= 1 ) {
+        SEXP tag0 = STRING_ELT( tag, 0 );
+        if( strcmp(CHAR(tag0), "BCIObjClass") == 0 ) {
+            isBCI2000Object = true;
+        }
+    }
+
+    if ( !isBCI2000Object ) {
         ::Rf_error("Not a BCI2000 object");
+    }
 
     S* sp = (S*)R_ExternalPtrAddr(s);
-    if (checkZero && !sp)
+    if (checkZero && !sp) {
         ::Rf_error("Address is 0");
+    }
+
 
     return sp;
 }
@@ -672,9 +689,11 @@ template <class S>
 inline SEXP bciObjCreate(const SEXP & config)
 {
     S* sp = new S(config);  // Obj pointer
-    SEXP s = PROTECT(
-        R_MakeExternalPtr((void*)sp, Rf_mkChar("BCIObjClass"), R_NilValue)
-    );
+
+    SEXP tag = PROTECT(Rf_allocVector(STRSXP, 1));
+    SET_STRING_ELT(tag, 0, Rf_mkChar("BCIObjClass"));
+
+    SEXP s = PROTECT( R_MakeExternalPtr((void*)sp, tag, R_NilValue) );
     R_RegisterCFinalizerEx(s, bciObjFinaliser<S>, TRUE);  // auto-called on GC
 
     SEXP clsNames = PROTECT(Rf_allocVector(STRSXP, 3));
@@ -683,7 +702,7 @@ inline SEXP bciObjCreate(const SEXP & config)
     SET_STRING_ELT(clsNames, 1, Rf_mkChar("BCIObjClass"));
     SET_STRING_ELT(clsNames, 2, Rf_mkChar("externalptr"));
     Rf_setAttrib(s, R_ClassSymbol, clsNames);
-    UNPROTECT(2);
+    UNPROTECT(3); // clsNames, s, tag
     return s;
 }
 

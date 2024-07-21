@@ -1,6 +1,6 @@
 Package: readNSx
 Title: Read 'Blackrock-Microsystems' Files ('NEV', 'NSx')
-Version: 0.0.4
+Version: 0.0.4.9000
 Authors@R: 
     person(given = "Zhengjia", family = "Wang", 
       email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
@@ -11,7 +11,7 @@ License: MPL-2.0 | file LICENSE
 Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports:
     data.table,
     fastmap,
@@ -27,7 +27,7 @@ Suggests:
     knitr,
     rmarkdown,
     spelling
-SystemRequirements: C++17, HDF5 (>= 1.8.13), little-endian platform
+SystemRequirements: HDF5 (>= 1.8.13), little-endian platform
 NeedsCompilation: yes
 Copyright: For the readNSx package: Zhengjia Wang.
 URL: http://dipterix.org/readNSx/
