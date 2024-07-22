@@ -175,7 +175,7 @@ SEXP rawToInt64(SEXP x) {
   SET_STRING_ELT(cls, 0, Rf_mkChar("integer64"));
   Rf_setAttrib(re, R_ClassSymbol, cls);
 
-  UNPROTECT(3);
+  UNPROTECT(2);
   return re;
 }
 
