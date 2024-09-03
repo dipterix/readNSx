@@ -1,3 +1,8 @@
+# readNSx 0.0.5
+
+* Fixed calling `R_MakeExternalPtr` with `Rf_mkChar`, using `Rf_install` instead
+* Fixed a potential imbalanced protect
+
 # readNSx 0.0.4
 
 * Fixed a `ASAN/UBSAN` error in `read_bci2000`

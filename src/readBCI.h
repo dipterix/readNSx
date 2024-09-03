@@ -648,7 +648,9 @@ inline S* getBCIObjPointer(SEXP s, bool checkZero=true)  // internal function
 
     bool isBCI2000Object = false;
 
-    if( TYPEOF(tag) == CHARSXP ) {
+    if(tag == Rf_install("BCIObjClass")) {
+        isBCI2000Object = true;
+    } else if( TYPEOF(tag) == CHARSXP ) {
         if( strcmp(CHAR(tag), "BCIObjClass") == 0 ) {
             isBCI2000Object = true;
         }
@@ -690,10 +692,10 @@ inline SEXP bciObjCreate(const SEXP & config)
 {
     S* sp = new S(config);  // Obj pointer
 
-    SEXP tag = PROTECT(Rf_allocVector(STRSXP, 1));
-    SET_STRING_ELT(tag, 0, Rf_mkChar("BCIObjClass"));
+    // SEXP tag = PROTECT(Rf_allocVector(STRSXP, 1));
+    // SET_STRING_ELT(tag, 0, Rf_mkChar("BCIObjClass"));
 
-    SEXP s = PROTECT( R_MakeExternalPtr((void*)sp, tag, R_NilValue) );
+    SEXP s = PROTECT( R_MakeExternalPtr((void*)sp, Rf_install("BCIObjClass"), R_NilValue) );
     R_RegisterCFinalizerEx(s, bciObjFinaliser<S>, TRUE);  // auto-called on GC
 
     SEXP clsNames = PROTECT(Rf_allocVector(STRSXP, 3));
@@ -702,7 +704,7 @@ inline SEXP bciObjCreate(const SEXP & config)
     SET_STRING_ELT(clsNames, 1, Rf_mkChar("BCIObjClass"));
     SET_STRING_ELT(clsNames, 2, Rf_mkChar("externalptr"));
     Rf_setAttrib(s, R_ClassSymbol, clsNames);
-    UNPROTECT(3); // clsNames, s, tag
+    UNPROTECT(2); // clsNames, s, // tag
     return s;
 }
 
