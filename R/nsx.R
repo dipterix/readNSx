@@ -12,10 +12,8 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   partition_prefix <- gsub("[\\/]{1,}$", "", partition_prefix)
 
   # DIPSAUS DEBUG START
-  # path <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/raw/YEK/EMU-057_subj-YEK_task-LOCALIZER_run-01_NSP-1.ns3'
-  # prefix <- '~/Dropbox (PENN Neurotrauma)/RAVE/Samples/bids/TestData/sub-YEK/ses-057/ieeg/sub-YEK_ses-057_task-localizer_acq-NSP1_run-01'
-  # path = "/Users/dipterix/Dropbox (PennNeurosurgery)/RAVE/Samples/raw/PAV032b/BLOCK011/NSP-PAV032b_Datafile_010.ns3"
-  # prefix <- "/Users/dipterix/Dropbox (PennNeurosurgery)/RAVE/Samples/raw/PAV032b/BLOCK011/NSP-PAV032b_Datafile_010_junk"
+  # path <- "/Users/dipterix/rave_data/raw_dir/POR006/b01/datafile_05_09_25.ns5"
+  # prefix <- '/Users/dipterix/rave_data/raw_dir/POR006/b01/datafile_05_09_25'
   # ftype <- get_file_type(path = path)
   # spec <- get_specification(ftype$version, "nsx")
   # fresh_start <- FALSE

@@ -9,15 +9,15 @@ LazyH5Internal <- R6::R6Class(
     read_only = TRUE,
     data_ptr = NULL,
     file_ptr = NULL,
-    last_dim = NULL
+    last_dim = NULL,
+    finalize = function(){
+      self$close(all = TRUE)
+    }
   ),
   public = list(
 
     quiet = FALSE,
 
-    finalize = function(){
-      self$close(all = TRUE)
-    },
     print = function(){
       if(!is.null(private$data_ptr)){
         if(private$data_ptr$is_valid){
@@ -294,7 +294,24 @@ as.array.LazyH5Internal <- function(x, ...){
   as.array(x$subset(), ...)
 }
 
-load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
+hdf5r_installed <- function() {
+  system.file(package = "hdf5r") != ""
+  # FALSE
+}
+
+load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE) {
+  if(endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
+
+  if(dir.exists(sprintf("%s.ralt", file))) {
+    tryCatch({
+      suppressWarnings({
+        re <- load_fakeh5(file = file, name = name, read_only = read_only, quiet = quiet, ram = ram)
+        return(re)
+      })
+    }, error = function(...) {})
+  }
 
   re <- tryCatch({
     re <- LazyH5Internal$new(file_path = file, data_name = name, read_only = read_only, quiet = quiet)
@@ -321,68 +338,98 @@ load_h5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
     re <- re[]
     f$close()
   }
+
   re
 }
 
 
 save_h5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
                     new_file = FALSE, ctype = NULL, quiet = FALSE, ...){
-  f <- tryCatch({
-    f <- LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
-    f$open()
-    f$close()
-    f
-  }, error = function(e){
-    if( !quiet ){
-      message('Saving failed. Attempt to unlink the file and retry...')
-    }
-    if(file.exists(file)){
-      # File is locked,
-      tmpf <- tempfile(fileext = 'conflict.w.h5')
-      file.copy(file, tmpf)
-      unlink(file, recursive = FALSE, force = TRUE)
-      file.copy(tmpf, file)
-      unlink(tmpf)
-    }
-    # Otherwise it's some weird error, or dirname not exists, expose the error
-    LazyH5Internal$new(file, name, read_only = FALSE)
-  })
-  on.exit({
-    f$close(all = TRUE)
-  }, add = TRUE)
-  f$save(x, chunk = chunk, level = level, replace = replace, new_file = new_file, ctype = ctype, force = TRUE, ...)
+  if(endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
 
-  return(invisible(normalizePath(file)))
+  if( hdf5r_installed() ) {
+    f <- tryCatch({
+      f <- LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+      f$open()
+      f$close()
+      f
+    }, error = function(e){
+      if( !quiet ){
+        message('Saving failed. Attempt to unlink the file and retry...')
+      }
+      if(file.exists(file)){
+        # File is locked,
+        tmpf <- tempfile(fileext = 'conflict.w.h5')
+        file.copy(file, tmpf)
+        unlink(file, recursive = FALSE, force = TRUE)
+        file.copy(tmpf, file)
+        unlink(tmpf)
+      }
+      # Otherwise it's some weird error, or dirname not exists, expose the error
+      LazyH5Internal$new(file, name, read_only = FALSE)
+    })
+    on.exit({
+      f$close(all = TRUE)
+    }, add = TRUE)
+    f$save(x, chunk = chunk, level = level, replace = replace, new_file = new_file, ctype = ctype, force = TRUE, ...)
+
+  } else {
+    save_fakeh5(
+      x = x, file = file, name = name, chunk = chunk,
+      level = level, replace = replace, new_file = new_file,
+      ctype = ctype, quiet = TRUE, ...)
+  }
+
+  return(invisible(normalizePath(file, mustWork = FALSE)))
 }
 
 
 h5_valid <- function(file, mode = c('r', 'w'), close_all = FALSE){
+  if(endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
+
   mode <- match.arg(mode)
-  tryCatch({
-    file <- normalizePath(file, mustWork = TRUE)
-    f <- hdf5r::H5File$new(filename = file, mode = mode)
-    if(close_all){
-      f$close_all()
-    } else {
-      f$close()
-    }
-    TRUE
-  }, error = function(e){
-    FALSE
-  })
+
+  re <- FALSE
+  if( hdf5r_installed() ) {
+    re <- tryCatch({
+      file <- normalizePath(file, mustWork = TRUE)
+      f <- hdf5r::H5File$new(filename = file, mode = mode)
+      if(close_all){
+        f$close_all()
+      } else {
+        f$close()
+      }
+      TRUE
+    }, error = function(e){
+      FALSE
+    })
+  } else {
+    re <- dir.exists(sprintf("%s.ralt", file))
+  }
+  re
 
 }
 
-
-
 h5_names <- function(file){
+  if(endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
+
   # make sure the file is valid
-  if(!h5_valid(file, 'r')){ return(FALSE) }
-  file <- normalizePath(file, mustWork = TRUE)
-  f <- hdf5r::H5File$new(filename = file, mode = 'r')
-  names <- hdf5r::list.datasets(f)
-  f$close()
-  names
+  if(!h5_valid(file, 'r')){ return(character()) }
+  file <- normalizePath(file, mustWork = FALSE)
+  if( hdf5r_installed() && file.exists(file)) {
+    f <- hdf5r::H5File$new(filename = file, mode = 'r')
+    names <- hdf5r::list.datasets(f)
+    f$close()
+  }
+  names <- c(names, fakehh5_names(file))
+
+  unique(names)
 }
 
 h5FileValid <- function(filename){

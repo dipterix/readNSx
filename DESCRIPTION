@@ -1,9 +1,11 @@
 Package: readNSx
 Title: Read 'Blackrock-Microsystems' Files ('NEV', 'NSx')
-Version: 0.0.5
+Version: 0.0.5.1
 Authors@R: 
+    c(
     person(given = "Zhengjia", family = "Wang", 
-      email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
+        email = "dipterix.wang@gmail.com", role = c("aut", "cre"))
+    )
 Description: Loads 'Blackrock' <https://blackrockneurotech.com> neural signal 
     data files into the memory, provides utility tools to extract the data into 
     common formats such as plain-text 'tsv' and 'HDF5'.
