@@ -22,8 +22,12 @@ test_that("uint8 conversion", {
 test_that("int64 conversion", {
   skip_if(system.file(package = "bit64") == "")
   x <- c(bit64::lim.integer64(), 0, -1, 1, bit64::NA_integer64_)
+
+  # https://github.com/r-lib/bit64/issues/76
+  c.integer64 <- tryCatch({ bit64::c.integer64 }, error = function(e) { base::c })
+
   y <- do.call(
-    bit64::c.integer64,
+    c.integer64,
     lapply(strsplit(bit64::as.bitstring(x), ""), function(s){
       bits <- rev(as.raw(s))
       rawToInt64(packBits(bits))
