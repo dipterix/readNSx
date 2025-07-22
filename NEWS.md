@@ -1,3 +1,7 @@
+# readNSx 0.0.6
+
+* `HDF5` falls back to alternatives in `WASM` to avoid compilation issues when running in web browser
+
 # readNSx 0.0.5
 
 * Fixed calling `R_MakeExternalPtr` with `Rf_mkChar`, using `Rf_install` instead

@@ -1,6 +1,6 @@
 Package: readNSx
 Title: Read 'Blackrock-Microsystems' Files ('NEV', 'NSx')
-Version: 0.0.5.1
+Version: 0.0.6
 Authors@R: 
     c(
     person(given = "Zhengjia", family = "Wang", 
