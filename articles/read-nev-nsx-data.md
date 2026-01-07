@@ -1,0 +1,220 @@
+# Read 'Blackrock' Neural Event & Signals
+
+## Introduction to `readNSx`
+
+`readNSx` is an R package that converts `Blackrock-Microsystems` files
+(`.nev`, `.nsx`) into commonly used formats that are compatible with
+`R`, `Python`, `Matlab`. The package is designed for neuroscientist who
+study intracranial Electroencephalography and use systems like
+`Blackrock`, `Ripple`, etc. Support versions are `2.2`, `2.3`, `3.0`.
+
+To install `readNSx` from `CRAN`,
+
+``` r
+install.packages("readNSx")
+```
+
+To install development version
+
+``` r
+install.packages("readNSx", repos = c(
+  dipterix = "https://dipterix.r-universe.dev",
+  CRAN = "https://cloud.r-project.org"))
+```
+
+## Basic Usage
+
+*(Well, this package has no advanced usage.)*
+
+### One-time import for the first time
+
+If you have never converted data, use the following one-time function
+call to import `.nev` and `.nsx` data:
+
+``` r
+readNSx::import_nsp(
+  path = "YAB_Datafile_001.nev", 
+  prefix = "YAB_Converted_001", 
+  exclude_events = "spike", 
+  partition_prefix = "/part"
+)
+```
+
+- `path`: path to `.nev` or any `nsx` file (such as `ns3, ns5`)
+- `prefix`: path prefix of imported files (where the data will be saved)
+- `exclude_events`: events to exclude from importing; default is “spike”
+  (spike-sorting waveform and classes)
+- `partition_prefix`: see Section “Anatomy of imported files”.
+
+Please check help function
+[`?readNSx::import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)
+
+### Load imported data from R
+
+*(If you have never imported data before, please check previous
+sub-section first)*
+
+#### Example 1: load epoch from `NEV` comment data packet events
+
+The following example loads the trial epoch table from `NEV` comment
+events. The `time_in_seconds` is the second of stimuli relative to
+`time_origin`. Column `comment` is whatever comments sent by the task
+script (sent from `psychtoolbox` or related software that you use when
+collecting data).
+
+``` r
+# prefix <- "YAB_Converted_001"
+nev <- readNSx::get_nev(prefix)
+
+# `time_in_seconds` is relative to time-origin
+nev$header_basic$time_origin
+#>        Year       Month   DayofWeek         Day        Hour   
+#>        2022           8           5          26          15   
+#>      Minute      Second Millisecond 
+#>           4          10         156 
+
+readNSx::get_event(nev, "comment")
+#>     timestamp packet_id char_set flag data   comment   event time_in_seconds 
+#> 1      683033     65535        0    0  255  audio-ba comment        22.76777 
+#> 2      753242     65535        0    0  255  video-ba comment        25.10807 
+#> ...
+```
+
+#### Example 2: get channel information and data
+
+``` r
+# prefix <- "YAB_Converted_001"
+
+# Gather information of channel 10
+loaded <- readNSx::get_channel(prefix, channel_id = 10)
+
+# Get NSx configurations, 
+loaded$nsx
+#> Basic header information (NSx):
+#>   Internal type: NEURALCD
+#>   Channel count: 152
+#>   Sample rate: 2000 Hz
+#>   Time origin: 2022-08-26 15:04:10 158ms
+#> Extended header information (NSx):
+#>   - CC (152 x 16, channels: 1-152): type, electrode_id, electrode_label, ...
+#> Cache status:
+#>   Prefix: ...
+#>   Number of partitions: 1
+
+
+# E.g. number of partitions (i.e. unpaused continuous recordings)
+loaded$nsx$nparts
+#> 1
+
+# Get channel information
+loaded$channel_info
+#>    type electrode_id electrode_label physical_connector connector_pin
+#> 10   CC           10        RA10-010                  1            10
+#>    min_digital_value max_digital_value min_analog_value
+#> 10            -32764             32764            -8191
+#>    max_analog_value units high_freq_corner high_freq_order
+#> 10             8191    uV              300               1
+#>    high_freq_type low_freq_corner low_freq_order low_freq_type
+#> 10              1         7500000              3             1
+#>    sample_rate_signal sample_rate_timestamp which_nsp    filename
+#> 10               2000                 30000         3 RA10-010.h5
+
+# Get channel data
+channel_signal <- loaded$channel_detail$part1$data; channel_signal
+#> Class: H5D
+#> Dataset: /data
+#> Filename: ...
+#> Access type: H5F_ACC_RDONLY
+#> Datatype: H5T_IEEE_F64LE
+#> Space: Type=Simple     Dims=798264     Maxdims=Inf
+#> Chunk: 16384
+
+# Get the actual numbers
+channel_signal[]
+```
+
+Please use square bracket `channel_signal[]` to load the data into the
+memory.
+
+## Anatomy of imported files
+
+The imported file paths will start with `prefix`, which is specified by
+you, my dear users. In the following demonstration, I’ll use a
+placeholder `<prefix>` to represent your inputs.
+
+    partition_info         - Name of continuous recording within the block, 
+                              sample rates, starting time per partition per NSx
+    <prefix>_scans         - Basic information for current block
+    <prefix>_channels      - Electrode channel information ( ID, Label, ... )
+    <prefix>_events/       - NEV setting headers and data packets (events)
+      - DIGLABEL           - Digital input setup
+      - NEUEVLBL           - Channel labels
+      - NEUEVWAVE          - Spike waveform settings
+      - ...                - Other settings
+      - event-***          - Data packets (digital inputs, comments...)
+      - waveforms.h5       - Spike waveforms & cluster
+    <prefix>_ieeg          - NSx data folder
+      - configurations.rds - NSx basic headers (versions, number of partitions, ...)
+      - partition_info     - Continuous recording duration, start time, sample rates
+      - nsx_summary.rds    - Internally used
+      - part1/, part2/, ...- Channel folder
+        - XXXX-001.h5      - Channel data file, each file correspond to a channel.
+        - XXXX-002.h5         The file name ALWAYS ends with channel ID.
+        - ...                 Each HDF5 file contains a "meta" and a "data" part,
+                                "meta": JSON string of channel information
+                                "data": numerical signal voltage data (in `uV`)
+
+The signal data is stored at `<prefix>_ieeg/part*` by default, where `*`
+are positive integers representing the partition number. The `Blackrock`
+system allows users to pause their recordings and resume later without
+having to start a new block. A partition in `readNSx` represents one
+continuous recording within a “block”. In most of cases, when there is
+no pause within a block, you will see only one partition. In some
+experimental settings, there could be one or more pauses, `readNSx` will
+store each continuous recordings in separate folders to make sure each
+partition is always continuous. The start time of the partitions will be
+stored in `partition_info.tsv`.
+
+Please be aware that partition pattern `<prefix>_ieeg/part*` is not
+fixed. You can change the pattern via parameter `partition_prefix` when
+importing the data. For example, `partition_prefix="_part` will create
+partition files within directory `<prefix>_ieeg_part*`.
+
+When `readNSx` stores the data, the channels are saved individually. For
+example, channel `1 (LA-2)` and `2 (LA-2)` are stored in separate `HDF5`
+files. This arrangement is out of the file-size and computational
+considerations:
+
+- When storing all channels together, the file size will become super
+  big. Reading one channel might resulting in reading the whole file (if
+  handled poorly, or if using network drive)
+- In some cases, `HDF5` files can only have one file pointers (file
+  locked by some software). This could limit batch computing algorithms
+  that can be paralleled at channel-level
+- My personal research requires fast approach to copy or share data for
+  quick inspection/analysis/visualizations (don’t want to move large
+  files around)
+
+### File formats
+
+The following file types will be generated:
+
+- `.h5` (`HDF5` file): common file format that can include one or more
+  data within a single file.
+  - `Matlab`: use `h5disp` to get enclosing data names; use `h5read` to
+    read specific data
+  - `Python`: use `h5py` package to load the files
+  - `R`: if you want to load them individually, use `raveio::h5_names`
+    to get enclosing data names; use `raveio::load_h5` to read specific
+    data. `readNSx` also provides high-level functions to load them (see
+    [`?readNSx::get_channel`](http://dipterix.org/readNSx/reference/get_channel.md)).
+- `.tsv` (tab-separated values file): plain text files that can be
+  easily read by many languages. You can open them in
+  `Microsoft Office: Excel`.
+- `.rds` (R object file): can only be read from R, internally used by
+  `readNSx` to store data objects. Users do not need to read from these
+  files (but also do NOT delete them, or `readNSx` will break). They
+  serve as redundant files in case the `tsv` files are altered
+  accidentally (for example, `Excel` might alter data formats
+  automatically). If you see an `.rds` file sharing the same name as
+  `.tsv`, they share the same information.
