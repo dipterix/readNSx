@@ -64,6 +64,18 @@ parseBCIParamDef <- function(statement) {
   .Call(`_readNSx_parseBCIParamDef`, statement)
 }
 
+scanNSxPackets30 <- function(filePath, nBytes, nChannels, skipBytes) {
+  .Call(`_readNSx_scanNSxPackets30`, filePath, nBytes, nChannels, skipBytes)
+}
+
+scanNSxPackets2x <- function(filePath, nBytes, nChannels, skipBytes) {
+  .Call(`_readNSx_scanNSxPackets2x`, filePath, nBytes, nChannels, skipBytes)
+}
+
+readNSxPacketData <- function(filePath, byteOffset, nDataPoints, nChannels, slope, intercept, sampleOffset, sampleCount) {
+  .Call(`_readNSx_readNSxPacketData`, filePath, byteOffset, nDataPoints, nChannels, slope, intercept, sampleOffset, sampleCount)
+}
+
 readNSxDataPacket30 <- function(filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept) {
   .Call(`_readNSx_readNSxDataPacket30`, filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept)
 }

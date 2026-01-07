@@ -125,13 +125,218 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
     nsx <- substring(path, nchar(path) - 2)
     if(file.exists(path)) {
       inc_progress(sprintf("Parsing %s", nsx), "Importing NSx")
-      results[[nsx]] <- read_nsx(path = path, prefix = prefix, partition_prefix = partition_prefix)
+      if(isTRUE(getOption("ieegio.legacy.read_nsx", FALSE))) {
+        results[[nsx]] <- read_nsx_legacy(path = path, prefix = prefix, partition_prefix = partition_prefix)
+      } else {
+        results[[nsx]] <- read_nsx(path = path, prefix = prefix, partition_prefix = partition_prefix)
+      }
     } else {
       inc_progress(sprintf("Skipping %s", nsx), "Importing NSx")
     }
   }
   return(results)
 }
+
+
+#' Compare new chunked read_nsx with legacy version
+#' @description Helper function to validate the new chunked reading implementation
+#' by comparing results with the legacy version that reads all data at once.
+#' @param path path to 'NEV' or 'NSx' files
+#' @param exclude_events passed to \code{\link{import_nsp}}
+#' @param exclude_nsx passed to \code{\link{import_nsp}}
+#' @param partition_prefix passed to \code{\link{import_nsp}}
+#' @param tolerance numeric tolerance for comparing signal values (default 1e-10)
+#' @param verbose logical, print progress messages
+#' @return A list with comparison results including:
+#' \describe{
+#' \item{identical}{logical, TRUE if all results match}
+#' \item{new_result}{result from new chunked method}
+#' \item{legacy_result}{result from legacy method}
+#' \item{differences}{list of any differences found}
+#' }
+#' @keywords internal
+compare_nsx_methods <- function(path, exclude_events = "spike",
+                                 exclude_nsx = NULL,
+                                 partition_prefix = "/part",
+                                 tolerance = 1e-10,
+                                 verbose = TRUE) {
+
+  # Get the base pattern for all NSx/NEV files
+
+path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRUE)
+
+  # Find all related files
+  all_files <- c(
+    paste0(path_pattern, ".nev"),
+    paste0(path_pattern, sprintf(".ns%d", seq_len(9)))
+  )
+  all_files <- all_files[file.exists(all_files)]
+
+  if(length(all_files) == 0) {
+    stop("No .nev or .nsx files found at path: ", path)
+  }
+
+  # Create two temporary directories
+  temp_base <- tempdir()
+  temp_new <- file.path(temp_base, "nsx_compare_new")
+  temp_legacy <- file.path(temp_base, "nsx_compare_legacy")
+
+  # Clean up old temp dirs if they exist
+  if(dir.exists(temp_new)) unlink(temp_new, recursive = TRUE)
+  if(dir.exists(temp_legacy)) unlink(temp_legacy, recursive = TRUE)
+
+  dir.create(temp_new, recursive = TRUE)
+  dir.create(temp_legacy, recursive = TRUE)
+
+  if(verbose) message("Copying files to temporary directories...")
+
+  # Copy files to both temp directories
+  for(f in all_files) {
+    fname <- basename(f)
+    file.copy(f, file.path(temp_new, fname))
+    file.copy(f, file.path(temp_legacy, fname))
+  }
+
+  # Get the path to one of the files in temp dirs
+  first_file <- basename(all_files[1])
+  path_new <- file.path(temp_new, first_file)
+  path_legacy <- file.path(temp_legacy, first_file)
+
+  prefix_new <- file.path(temp_new, "output")
+  prefix_legacy <- file.path(temp_legacy, "output")
+
+  # Run new method
+  if(verbose) message("Running new chunked method...")
+  old_option <- getOption("ieegio.legacy.read_nsx")
+  on.exit(options(ieegio.legacy.read_nsx = old_option), add = TRUE)
+
+  options(ieegio.legacy.read_nsx = FALSE)
+  result_new <- import_nsp(
+    path = path_new,
+    prefix = prefix_new,
+    exclude_events = exclude_events,
+    exclude_nsx = exclude_nsx,
+    verbose = FALSE,
+    partition_prefix = partition_prefix
+  )
+
+  # Run legacy method
+  if(verbose) message("Running legacy method...")
+  options(ieegio.legacy.read_nsx = TRUE)
+  result_legacy <- import_nsp(
+    path = path_legacy,
+    prefix = prefix_legacy,
+    exclude_events = exclude_events,
+    exclude_nsx = exclude_nsx,
+    verbose = FALSE,
+    partition_prefix = partition_prefix
+  )
+
+  # Compare results
+  if(verbose) message("Comparing results...")
+
+  differences <- list()
+  all_identical <- TRUE
+
+  # Compare each NSx
+  nsx_names <- grep("^ns[1-9]$", names(result_new), value = TRUE)
+
+  for(nsx_name in nsx_names) {
+    nsx_new <- result_new[[nsx_name]]
+    nsx_legacy <- result_legacy[[nsx_name]]
+
+    if(is.null(nsx_new) && is.null(nsx_legacy)) next
+
+    if(is.null(nsx_new) || is.null(nsx_legacy)) {
+      differences[[nsx_name]] <- "One result is NULL"
+      all_identical <- FALSE
+      next
+    }
+
+    # Compare number of partitions
+    if(nsx_new$nparts != nsx_legacy$nparts) {
+      differences[[nsx_name]] <- sprintf(
+        "Different number of partitions: new=%d, legacy=%d",
+        nsx_new$nparts, nsx_legacy$nparts
+      )
+      all_identical <- FALSE
+      next
+    }
+
+    # Compare channel data for each partition
+    n_channels <- nsx_new$header_basic$channel_count
+    channel_diffs <- list()
+
+    for(part in seq_len(nsx_new$nparts)) {
+      for(ch in seq_len(n_channels)) {
+        channel_id <- nsx_new$header_extended$CC$electrode_id[ch]
+        channel_label <- nsx_new$header_extended$CC$electrode_label[ch]
+
+        fname <- channel_filename(channel_id = channel_id, channel_label = channel_label)
+
+        path_data_new <- file.path(
+          sprintf("%s_ieeg%s%d", prefix_new, partition_prefix, part),
+          fname
+        )
+        path_data_legacy <- file.path(
+          sprintf("%s_ieeg%s%d", prefix_legacy, partition_prefix, part),
+          fname
+        )
+
+        if(!file.exists(path_data_new) || !file.exists(path_data_legacy)) {
+          channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- "File missing"
+          all_identical <- FALSE
+          next
+        }
+
+        data_new <- load_h5(path_data_new, "data", ram = TRUE)
+        data_legacy <- load_h5(path_data_legacy, "data", ram = TRUE)
+
+        if(length(data_new) != length(data_legacy)) {
+          channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- sprintf(
+            "Different lengths: new=%d, legacy=%d",
+            length(data_new), length(data_legacy)
+          )
+          all_identical <- FALSE
+          next
+        }
+
+        max_diff <- max(abs(data_new - data_legacy))
+        if(max_diff > tolerance) {
+          channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- sprintf(
+            "Max difference: %g", max_diff
+          )
+          all_identical <- FALSE
+        }
+      }
+    }
+
+    if(length(channel_diffs) > 0) {
+      differences[[nsx_name]] <- channel_diffs
+    }
+  }
+
+  if(verbose) {
+    if(all_identical) {
+      message("SUCCESS: All results are identical (within tolerance ", tolerance, ")")
+    } else {
+      message("DIFFERENCES FOUND:")
+      print(differences)
+    }
+  }
+
+  # Clean up
+  unlink(temp_new, recursive = TRUE)
+  unlink(temp_legacy, recursive = TRUE)
+
+  list(
+    identical = all_identical,
+    new_result = result_new,
+    legacy_result = result_legacy,
+    differences = differences
+  )
+}
+
 
 #' @title Load 'NEV' information from path prefix
 #' @param x path \code{prefix} specified in \code{\link{import_nsp}}, or

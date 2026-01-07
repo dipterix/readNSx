@@ -264,6 +264,164 @@ LazyH5Internal <- R6::R6Class(
         self$close(all = !private$read_only)
       }
       re
+    },
+
+    allocate = function(dims, chunk = "auto", level = 4, ctype = "numeric",
+                        replace = TRUE, new_file = FALSE) {
+      # Pre-allocate an HDF5 dataset with specified dimensions
+      # without loading data into memory
+      if (private$read_only) {
+        stop("File is read-only. Cannot allocate dataset.")
+      }
+
+      if (new_file && file.exists(private$file)) {
+        self$close(all = TRUE)
+        file.remove(private$file)
+      }
+
+      # Open or create file
+      if (is.null(private$file_ptr) || !private$file_ptr$is_valid) {
+        private$file_ptr <- hdf5r::H5File$new(private$file, "a")
+      }
+
+      # Create parent groups if needed
+      g <- strsplit(private$name, split = "/")[[1]]
+      g <- g[trimws(g) != ""]
+
+      ptr <- private$file_ptr
+      nm <- ""
+
+      for (i in g[-length(g)]) {
+        nm <- sprintf("%s/%s", nm, i)
+        if (!ptr$path_valid(path = nm)) {
+          ptr <- ptr$create_group(i)
+        } else {
+          ptr <- ptr[[i]]
+        }
+      }
+
+      # Dataset name
+      nm <- g[length(g)]
+
+      # Remove existing dataset if replace = TRUE
+      if (ptr$path_valid(path = nm)) {
+        if (replace) {
+          ptr$link_delete(nm)
+        } else {
+          stop("Dataset already exists. Use replace = TRUE to overwrite.")
+        }
+      }
+
+      # Determine dtype based on ctype
+      if (ctype == "integer") {
+        dtype <- hdf5r::h5types$H5T_NATIVE_INT
+      } else {
+        dtype <- hdf5r::h5types$H5T_NATIVE_DOUBLE
+      }
+
+      # Create dataspace with specified dimensions
+      space <- hdf5r::H5S$new(dims = dims, maxdims = dims)
+
+      # Create dataset with pre-allocated space
+      ptr$create_dataset(
+        name = nm,
+        dtype = dtype,
+        space = space,
+        chunk_dims = chunk,
+        gzip_level = level
+      )
+
+      if (ptr$is_valid && inherits(ptr, "H5Group")) {
+        ptr$close()
+      }
+
+      self$close(all = TRUE)
+      invisible(self)
+    },
+
+    write_slice = function(x, start) {
+      # Write data to a specific location in the dataset using hyperslab selection
+      # start: 1-based index vector (i, j, k, ...) for the starting position
+      # x: data to write
+
+      if (private$read_only) {
+        stop("File is read-only. Cannot write to dataset.")
+      }
+
+      # Ensure start is a vector
+      if (length(start) == 1 && !is.null(dim(x))) {
+        stop("start must have the same number of dimensions as the data")
+      }
+      start <- as.integer(start)
+
+      # Get data dimensions
+      if (is.null(dim(x))) {
+        x_dims <- length(x)
+      } else {
+        x_dims <- dim(x)
+      }
+
+      if (length(start) != length(x_dims)) {
+        stop("start must have the same number of dimensions as the data")
+      }
+
+      # Open file and dataset
+      if (is.null(private$file_ptr) || !private$file_ptr$is_valid) {
+        if (!file.exists(private$file)) {
+          stop("File does not exist. Call allocate_h5() first.")
+        }
+        private$file_ptr <- hdf5r::H5File$new(private$file, "a")
+      }
+
+      if (!private$file_ptr$path_valid(private$name)) {
+        self$close(all = TRUE)
+        stop("Dataset does not exist. Call allocate_h5() first.")
+      }
+
+      private$data_ptr <- private$file_ptr[[private$name]]
+      dataset_dims <- private$data_ptr$dims
+
+      # Validate bounds
+      end_idx <- start + x_dims - 1L
+      if (any(end_idx > dataset_dims) || any(start < 1L)) {
+        self$close(all = TRUE)
+        stop(sprintf(
+          "Write out of bounds: start=%s, count=%s, dataset dims=%s",
+          paste(start, collapse = ","),
+          paste(x_dims, collapse = ","),
+          paste(dataset_dims, collapse = ",")
+        ))
+      }
+
+      on.exit({
+        self$close(all = TRUE)
+      }, add = TRUE)
+
+      # Use native HDF5 hyperslab selection for memory-efficient writing
+      # This avoids creating large index vectors for big slices
+      # hdf5r's select_hyperslab uses 1-based indexing (matching R convention)
+      h5_start <- as.numeric(start)
+      h5_count <- as.numeric(x_dims)
+
+      # Get file dataspace and select hyperslab
+      file_space <- private$data_ptr$get_space()
+      file_space$select_hyperslab(start = h5_start, count = h5_count)
+
+      # Create memory dataspace matching the data
+      mem_space <- hdf5r::H5S$new(dims = x_dims)
+
+      # Write using low-level API with hyperslab selection
+      private$data_ptr$write_low_level(
+        robj = x,
+        file_space = file_space,
+        mem_space = mem_space
+      )
+
+      # Clean up spaces
+      file_space$close()
+      mem_space$close()
+
+      invisible(self)
     }
   )
 )
@@ -380,6 +538,96 @@ save_h5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
       x = x, file = file, name = name, chunk = chunk,
       level = level, replace = replace, new_file = new_file,
       ctype = ctype, quiet = TRUE, ...)
+  }
+
+  return(invisible(normalizePath(file, mustWork = FALSE)))
+}
+
+
+allocate_h5 <- function(file, name, dims, chunk = "auto", level = 4,
+                        replace = TRUE, new_file = FALSE, ctype = "numeric",
+                        quiet = FALSE) {
+  # Pre-allocate an HDF5 dataset with specified dimensions
+  # dims: integer vector of dimensions
+  # ctype: "numeric" (double) or "integer"
+  if (endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
+
+  dims <- as.integer(dims)
+  if (any(dims <= 0)) {
+    stop("dims must be positive integers")
+  }
+
+  if (hdf5r_installed()) {
+    f <- tryCatch(
+      {
+        LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+      },
+      error = function(e) {
+        if (!quiet) {
+          message("Allocation failed. Attempting to unlink and retry...")
+        }
+        if (file.exists(file)) {
+          tmpf <- tempfile(fileext = "conflict.w.h5")
+          file.copy(file, tmpf)
+          unlink(file, recursive = FALSE, force = TRUE)
+          file.copy(tmpf, file)
+          unlink(tmpf)
+        }
+        LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+      }
+    )
+    on.exit(
+      {
+        f$close(all = TRUE)
+      },
+      add = TRUE
+    )
+    f$allocate(
+      dims = dims, chunk = chunk, level = level,
+      ctype = ctype, replace = replace, new_file = new_file
+    )
+  } else {
+    allocate_fakeh5(
+      file = file, name = name, dims = dims, chunk = chunk,
+      level = level, replace = replace, new_file = new_file,
+      ctype = ctype, quiet = quiet
+    )
+  }
+
+  return(invisible(normalizePath(file, mustWork = FALSE)))
+}
+
+
+write_h5_slice <- function(x, file, name, start, quiet = FALSE) {
+  # Write data to a specific location in an existing HDF5 dataset
+  # x: data to write
+  # start: 1-based starting index (scalar for 1D, vector for nD)
+  if (endsWith(tolower(file), ".ralt")) {
+    file <- gsub("\\.ralt", "", file, ignore.case = TRUE)
+  }
+
+  if (hdf5r_installed()) {
+    f <- tryCatch(
+      {
+        LazyH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+      },
+      error = function(e) {
+        stop("Cannot open file for writing: ", e$message)
+      }
+    )
+    on.exit(
+      {
+        f$close(all = TRUE)
+      },
+      add = TRUE
+    )
+    f$write_slice(x = x, start = start)
+  } else {
+    write_fakeh5_slice(
+      x = x, file = file, name = name, start = start, quiet = quiet
+    )
   }
 
   return(invisible(normalizePath(file, mustWork = FALSE)))

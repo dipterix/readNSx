@@ -120,6 +120,27 @@ extern "C" SEXP _readNSx_parseBCIParamDef(SEXP statement) {
   END_CPP11
 }
 // readNSxDataPacket.cpp
+SEXP scanNSxPackets30(const std::string& filePath, const size_t& nBytes, const int& nChannels, const size_t& skipBytes);
+extern "C" SEXP _readNSx_scanNSxPackets30(SEXP filePath, SEXP nBytes, SEXP nChannels, SEXP skipBytes) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(scanNSxPackets30(cpp11::as_cpp<cpp11::decay_t<const std::string&>>(filePath), cpp11::as_cpp<cpp11::decay_t<const size_t&>>(nBytes), cpp11::as_cpp<cpp11::decay_t<const int&>>(nChannels), cpp11::as_cpp<cpp11::decay_t<const size_t&>>(skipBytes)));
+  END_CPP11
+}
+// readNSxDataPacket.cpp
+SEXP scanNSxPackets2x(const std::string& filePath, const size_t& nBytes, const int& nChannels, const size_t& skipBytes);
+extern "C" SEXP _readNSx_scanNSxPackets2x(SEXP filePath, SEXP nBytes, SEXP nChannels, SEXP skipBytes) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(scanNSxPackets2x(cpp11::as_cpp<cpp11::decay_t<const std::string&>>(filePath), cpp11::as_cpp<cpp11::decay_t<const size_t&>>(nBytes), cpp11::as_cpp<cpp11::decay_t<const int&>>(nChannels), cpp11::as_cpp<cpp11::decay_t<const size_t&>>(skipBytes)));
+  END_CPP11
+}
+// readNSxDataPacket.cpp
+SEXP readNSxPacketData(const std::string& filePath, const size_t& byteOffset, const int& nDataPoints, const int& nChannels, const cpp11::doubles& slope, const cpp11::doubles& intercept, const int& sampleOffset, const int& sampleCount);
+extern "C" SEXP _readNSx_readNSxPacketData(SEXP filePath, SEXP byteOffset, SEXP nDataPoints, SEXP nChannels, SEXP slope, SEXP intercept, SEXP sampleOffset, SEXP sampleCount) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(readNSxPacketData(cpp11::as_cpp<cpp11::decay_t<const std::string&>>(filePath), cpp11::as_cpp<cpp11::decay_t<const size_t&>>(byteOffset), cpp11::as_cpp<cpp11::decay_t<const int&>>(nDataPoints), cpp11::as_cpp<cpp11::decay_t<const int&>>(nChannels), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(slope), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(intercept), cpp11::as_cpp<cpp11::decay_t<const int&>>(sampleOffset), cpp11::as_cpp<cpp11::decay_t<const int&>>(sampleCount)));
+  END_CPP11
+}
+// readNSxDataPacket.cpp
 SEXP readNSxDataPacket30(const std::string& filePath, const uint32_t& nBytes, const double& sampleRate, const int& nChannels, const uint32_t& skipBytes, const double& slope, const double& intercept);
 extern "C" SEXP _readNSx_readNSxDataPacket30(SEXP filePath, SEXP nBytes, SEXP sampleRate, SEXP nChannels, SEXP skipBytes, SEXP slope, SEXP intercept) {
   BEGIN_CPP11
@@ -154,6 +175,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_readNSx_rawToUInt8",          (DL_FUNC) &_readNSx_rawToUInt8,          1},
     {"_readNSx_readNSxDataPacket2x", (DL_FUNC) &_readNSx_readNSxDataPacket2x, 7},
     {"_readNSx_readNSxDataPacket30", (DL_FUNC) &_readNSx_readNSxDataPacket30, 7},
+    {"_readNSx_readNSxPacketData",   (DL_FUNC) &_readNSx_readNSxPacketData,   8},
+    {"_readNSx_scanNSxPackets2x",    (DL_FUNC) &_readNSx_scanNSxPackets2x,    4},
+    {"_readNSx_scanNSxPackets30",    (DL_FUNC) &_readNSx_scanNSxPackets30,    4},
     {NULL, NULL, 0}
 };
 }

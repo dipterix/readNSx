@@ -1,6 +1,6 @@
 Package: readNSx
 Title: Read 'Blackrock-Microsystems' Files ('NEV', 'NSx')
-Version: 0.0.6
+Version: 0.0.6.1
 Authors@R: 
     c(
     person(given = "Zhengjia", family = "Wang", 
@@ -13,7 +13,7 @@ License: MPL-2.0 | file LICENSE
 Language: en-US
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     data.table,
     fastmap,

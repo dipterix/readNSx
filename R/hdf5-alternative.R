@@ -134,6 +134,102 @@ LazyFakeH5Internal <- R6::R6Class(
         return(meta$.dim)
       }
       return(meta$.length)
+    },
+
+    allocate = function(dims, chunk = "auto", level = 4, ctype = "numeric",
+                        replace = TRUE, new_file = FALSE) {
+      # Pre-allocate dataset with specified dimensions, filled with NA
+      if (private$read_only) {
+        stop("File is read-only. Cannot allocate dataset.")
+      }
+
+      data_path <- private$ensure_data_path(new_file = new_file)
+      data_rds <- file.path(data_path, "data.rds")
+      meta_rds <- file.path(data_path, "meta.rds")
+
+      # Check if dataset exists
+      if (file.exists(data_rds) && !replace) {
+        stop("Dataset already exists. Use replace = TRUE to overwrite.")
+      }
+
+      dims <- as.integer(dims)
+
+      # Create array filled with NA of appropriate type
+      if (ctype == "integer") {
+        x <- array(NA_integer_, dim = dims)
+      } else {
+        x <- array(NA_real_, dim = dims)
+      }
+
+      # Save data and metadata
+      saveRDS(x, file = data_rds)
+      saveRDS(list(
+        .length = prod(dims),
+        .dim = dims,
+        .r_storage = storage.mode(x),
+        chunk = chunk,
+        level = level,
+        ctype = ctype
+      ), file = meta_rds)
+
+      invisible(self)
+    },
+
+    write_slice = function(x, start) {
+      # Write data to a specific location in the dataset
+      # start: 1-based index vector (i, j, k, ...) for the starting position
+      if (private$read_only) {
+        stop("File is read-only. Cannot write to dataset.")
+      }
+
+      data_path <- private$get_data_path()
+      data_rds <- file.path(data_path, "data.rds")
+
+      if (!file.exists(data_rds)) {
+        stop("Dataset does not exist. Call allocate_h5() first.")
+      }
+
+      # Ensure start is a vector
+      start <- as.integer(start)
+
+      # Get data dimensions
+      if (is.null(dim(x))) {
+        x_dims <- length(x)
+      } else {
+        x_dims <- dim(x)
+      }
+
+      if (length(start) != length(x_dims)) {
+        stop("start must have the same number of dimensions as the data")
+      }
+
+      # Load existing data
+      data <- readRDS(data_rds)
+      dataset_dims <- if (is.null(dim(data))) length(data) else dim(data)
+
+      # Validate bounds
+      end_idx <- start + x_dims - 1L
+      if (any(end_idx > dataset_dims) || any(start < 1L)) {
+        stop(sprintf(
+          "Write out of bounds: start=%s, count=%s, dataset dims=%s",
+          paste(start, collapse = ","),
+          paste(x_dims, collapse = ","),
+          paste(dataset_dims, collapse = ",")
+        ))
+      }
+
+      # Generate indices for subassignment
+      args <- lapply(seq_along(start), function(i) {
+        seq.int(from = start[i], length.out = x_dims[i])
+      })
+
+      # Subassign data
+      data <- do.call(`[<-`, c(list(data), args, list(value = x)))
+
+      # Save back
+      saveRDS(data, file = data_rds)
+
+      invisible(self)
     }
   )
 )
@@ -152,6 +248,27 @@ save_fakeh5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
   f <- LazyFakeH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
   f$save(x, chunk = chunk, level = level, replace = replace, new_file = new_file, ctype = ctype, force = TRUE, ...)
   return(invisible(normalizePath(file, mustWork = FALSE)))
+}
+
+
+allocate_fakeh5 <- function(file, name, dims, chunk = "auto", level = 4,
+                            replace = TRUE, new_file = FALSE, ctype = "numeric",
+                            quiet = FALSE) {
+  # Pre-allocate a fake HDF5 dataset (RDS-based) with specified dimensions
+  f <- LazyFakeH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+  f$allocate(
+    dims = dims, chunk = chunk, level = level,
+    ctype = ctype, replace = replace, new_file = new_file
+  )
+  return(invisible(normalizePath(sprintf("%s.ralt", file), mustWork = FALSE)))
+}
+
+
+write_fakeh5_slice <- function(x, file, name, start, quiet = FALSE) {
+  # Write data to a specific location in an existing fake HDF5 dataset
+  f <- LazyFakeH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
+  f$write_slice(x = x, start = start)
+  return(invisible(normalizePath(sprintf("%s.ralt", file), mustWork = FALSE)))
 }
 
 
