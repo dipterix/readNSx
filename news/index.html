@@ -37,6 +37,11 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.7" id="readnsx-007">readNSx 0.0.7<a class="anchor" aria-label="anchor" href="#readnsx-007"></a></h2>
+<ul><li>
+<code>import_nsp</code> Supports streaming the data with lengths larger than the bound of 32-bit integers. This supports high-frequency long-time continuous recording, extending the <code>30,000 Hz</code> recording duration from 10 minutes (100 channels) to Almost a half day recording. The individual channel size is still limited by the 32-bit integer, that is around 19 hours</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.6" id="readnsx-006">readNSx 0.0.6<a class="anchor" aria-label="anchor" href="#readnsx-006"></a></h2><p class="text-muted">CRAN release: 2025-10-24</p>
 <ul><li>
 <code>HDF5</code> falls back to alternatives in <code>WASM</code> to avoid compilation issues when running in web browser</li>
