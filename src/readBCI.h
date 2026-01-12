@@ -341,16 +341,16 @@ struct BCIParamDef {
                 result.push_back(NA_REAL);
                 result.push_back(NA_REAL);
             }
-            return cpp11::writable::list({
-                "section"_nm = this->section,
-                "name"_nm = this->name,
-                "comment"_nm = this->comment,
-                "data_type"_nm = this->dataTypeName,
-                "value"_nm = result[0],
-                "default"_nm = result[1],
-                "lower_bound"_nm = result[2],
-                "higher_bound"_nm = result[3]
-            });
+            return readnsx::makeNamedList(
+                "section", cpp11::as_sexp(this->section),
+                "name", cpp11::as_sexp(this->name),
+                "comment", cpp11::as_sexp(this->comment),
+                "data_type", cpp11::as_sexp(this->dataTypeName),
+                "value", cpp11::as_sexp(result[0]),
+                "default", cpp11::as_sexp(result[1]),
+                "lower_bound", cpp11::as_sexp(result[2]),
+                "higher_bound", cpp11::as_sexp(result[3])
+            );
         }
         if( this->dataTypeName.compare("intlist") == 0 ||
             this->dataTypeName.compare("floatlist") == 0 ) {
@@ -359,16 +359,16 @@ struct BCIParamDef {
             // nothing to return
             if( result.size() < 4 ) {
                 std::vector<double> re(0);
-                return cpp11::writable::list({
-                    "section"_nm = this->section,
-                    "name"_nm = this->name,
-                    "comment"_nm = this->comment,
-                    "data_type"_nm = this->dataTypeName,
-                    "value"_nm = re,
-                    "default"_nm = NA_REAL,
-                    "lower_bound"_nm = NA_REAL,
-                    "higher_bound"_nm = NA_REAL
-                });
+                return readnsx::makeNamedList(
+                    "section", cpp11::as_sexp(this->section),
+                    "name", cpp11::as_sexp(this->name),
+                    "comment", cpp11::as_sexp(this->comment),
+                    "data_type", cpp11::as_sexp(this->dataTypeName),
+                    "value", cpp11::as_sexp(re),
+                    "default", cpp11::as_sexp(NA_REAL),
+                    "lower_bound", cpp11::as_sexp(NA_REAL),
+                    "higher_bound", cpp11::as_sexp(NA_REAL)
+                );
             }
             double len_ = result[0];
             std::size_t len = (std::size_t) len_;
@@ -388,16 +388,16 @@ struct BCIParamDef {
                     *rePtr = df;
                 }
             }
-            SEXP ret = cpp11::writable::list({
-                "section"_nm = this->section,
-                "name"_nm = this->name,
-                "comment"_nm = this->comment,
-                "data_type"_nm = this->dataTypeName,
-                "value"_nm = re,
-                "default"_nm = df,
-                "lower_bound"_nm = lb,
-                "higher_bound"_nm = ub
-            });
+            SEXP ret = readnsx::makeNamedList(
+                "section", cpp11::as_sexp(this->section),
+                "name", cpp11::as_sexp(this->name),
+                "comment", cpp11::as_sexp(this->comment),
+                "data_type", cpp11::as_sexp(this->dataTypeName),
+                "value", re,
+                "default", cpp11::as_sexp(df),
+                "lower_bound", cpp11::as_sexp(lb),
+                "higher_bound", cpp11::as_sexp(ub)
+            );
             UNPROTECT(1); //re
             return ret;
         }
@@ -406,16 +406,16 @@ struct BCIParamDef {
         if( this->dataTypeName.compare("string") == 0 ) {
             vStr = bciStrDecode( this->valueString, "" );
         }
-        return cpp11::writable::list({
-            "section"_nm = this->section,
-            "name"_nm = this->name,
-            "comment"_nm = this->comment,
-            "data_type"_nm = this->dataTypeName,
-            "value"_nm = vStr,
-            "default"_nm = NA_REAL,
-            "lower_bound"_nm = NA_REAL,
-            "higher_bound"_nm = NA_REAL
-        });
+        return readnsx::makeNamedList(
+            "section", cpp11::as_sexp(this->section),
+            "name", cpp11::as_sexp(this->name),
+            "comment", cpp11::as_sexp(this->comment),
+            "data_type", cpp11::as_sexp(this->dataTypeName),
+            "value", cpp11::as_sexp(vStr),
+            "default", cpp11::as_sexp(NA_REAL),
+            "lower_bound", cpp11::as_sexp(NA_REAL),
+            "higher_bound", cpp11::as_sexp(NA_REAL)
+        );
     }
 
     //
@@ -628,10 +628,10 @@ public:
 
         Rf_setAttrib(states_, R_DimSymbol, states_dm);
 
-        SEXP re_names = cpp11::writable::list({
-            "data"_nm = data_,
-                "states"_nm = states_
-        });
+        SEXP re_names = readnsx::makeNamedList(
+            "data", data_,
+            "states", states_
+        );
         UNPROTECT(4); // states_dm, states_, data_dm, data_
         return re_names;
     }

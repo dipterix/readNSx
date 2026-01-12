@@ -81,12 +81,12 @@ SEXP scanNSxPackets(const std::string& filePath,
             currentOffset += nPointsInBytes;
         }
 
-        return writable::list({
-            "timestamps"_nm = timestamps,
-            "n_data_points"_nm = nDataPoints,
-            "byte_offsets"_nm = byteOffsets,
-            "n_packets"_nm = (int)timestamps.size()
-        });
+        return readnsx::makeNamedList(
+            "timestamps", cpp11::as_sexp(timestamps),
+            "n_data_points", cpp11::as_sexp(nDataPoints),
+            "byte_offsets", cpp11::as_sexp(byteOffsets),
+            "n_packets", cpp11::as_sexp((int)timestamps.size())
+        );
 
     } catch (const std::exception& e) {
         ::Rf_error("%s", e.what());
@@ -322,11 +322,10 @@ SEXP readNSxDataPacket(const std::string& filePath,
             }
         }
         UNPROTECT(1); // buf
-        return writable::list({
-            "timestamps"_nm = timeStamps,
-                "data"_nm = signals
-        });
-
+        return readnsx::makeNamedList(
+            "timestamps", cpp11::as_sexp(timeStamps),
+            "data", cpp11::as_sexp(signals)
+        );
 
     } catch (const std::exception& e) {
         ::Rf_error("%s", e.what());
