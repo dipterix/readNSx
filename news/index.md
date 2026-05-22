@@ -8,6 +8,8 @@
   from 10 minutes (100 channels) to Almost a half day recording. The
   individual channel size is still limited by the 32-bit integer, that
   is around 19 hours
+- Fixed an `rchk` issue reported by `CRAN`
+- Replaced `c.integer64` with `c`
 
 ## readNSx 0.0.6
 
