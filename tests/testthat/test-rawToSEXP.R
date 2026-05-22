@@ -3,7 +3,7 @@
 # library(readNSx)
 
 test_that("int32 conversion", {
-  x <- as.integer(c(2^31-1, -2^31+1, 0, -1, 1, NA_integer_))
+  x <- as.integer(c(2^31 - 1, -2^31 + 1, 0, -1, 1, NA_integer_))
   bits <- sapply(x, intToBits)
   y <- apply(bits, 2, function(s) {
     rawToInt32(packBits(s))
@@ -25,7 +25,7 @@ test_that("int64 conversion", {
 
   dots <- c(
     list(bit64::integer64()),
-    lapply(strsplit(bit64::as.bitstring(x), ""), function(s){
+    lapply(strsplit(bit64::as.bitstring(x), ""), function(s) {
       bits <- rev(as.raw(s))
       rawToInt64(packBits(bits))
     })

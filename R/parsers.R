@@ -24,13 +24,13 @@ parse_uint64 <- function(x, ...) {
   # There is no R data type that can hold uint64
   # luckily, blackrock uses uint64 to store timestamp, which
   # should not exceed the half limit, and int64 should suffice
-  if(!requireNamespace("bit64")) {
+  if (!requireNamespace("bit64")) {
     warning("The data contains integer64 type, which is not supported by native R. Please install `bit64` package via\n  install.packages('bit64')")
   }
   rawToInt64(x)
 }
 parse_int64 <- function(x, ...) {
-  if(!requireNamespace("bit64")) {
+  if (!requireNamespace("bit64")) {
     warning("The data contains integer64 type, which is not supported by native R. Please install `bit64` package via\n  install.packages('bit64')")
   }
   rawToInt64(x)
@@ -66,7 +66,7 @@ parse_packet <- function(x, item, ...) {
     re$value
   })
   names(packet) <- names
-  if(length(item$event)) {
+  if (length(item$event)) {
     packet$event <- item$event
   }
   packet
@@ -85,7 +85,7 @@ parse_comment_packet <- function(x, item, ...) {
     idx <<- idx + sub_specs$.bytes
     re$value
   })
-  if(is.character(packet[[length(packet)]]) && length(x) > length(idx)) {
+  if (is.character(packet[[length(packet)]]) && length(x) > length(idx)) {
     s <- parse_string(x[-seq_len(idx)])
     packet[[length(packet)]] <- paste0(packet[[length(packet)]], s)
   }
@@ -100,17 +100,17 @@ parse_item <- function(slice_data, item) {
   # slice_idx <- section_slice_idx[ii, ]
   # slice_data <- section_data[seq(slice_idx[[1]], slice_idx[[2]])]
   parser <- get_parse_function(item$type)
-  if(!is.function(parser)) {
+  if (!is.function(parser)) {
     stop("Cannot obtain parser function for type: ", item$type)
   }
-  if(item$n > 1) {
+  if (item$n > 1) {
     re <- matrix(slice_data, ncol = item$n, byrow = FALSE)
     re <- apply(re, 2, parser, item = item)
   } else {
     re <- parser(slice_data, item = item)
   }
 
-  if(length(item$names)) {
+  if (length(item$names)) {
     names(re) <- item$names
   }
   structure(
@@ -176,7 +176,7 @@ read_keyvalue_pairs <- function(conn, rules, item_list, expected_items, as_data_
 
     item <- dict$get(key, missing = local({
       item <- item_list[[key]]
-      if(is.null(item)) {
+      if (is.null(item)) {
         stop("Cannot find specification for keyword: [", key, "]")
       }
       item$name <- key
@@ -186,7 +186,7 @@ read_keyvalue_pairs <- function(conn, rules, item_list, expected_items, as_data_
     }))
 
     rest_length <- item$.bytes - initial_bytes
-    if( rest_length < 0 ) {
+    if ( rest_length < 0 ) {
       stop("Wrong specification: data packet size is not enough to aquire packet key/ID. To obtain the key, it requires [", initial_bytes, "] bytes, but the packet size is: [", item$.bytes, "]")
     }
 
@@ -194,7 +194,7 @@ read_keyvalue_pairs <- function(conn, rules, item_list, expected_items, as_data_
 
     packet <- parse_item(slice_data = buf, item = item)
 
-    if(!re$has(key)) {
+    if (!re$has(key)) {
       queue <- fastmap::fastqueue()
       re$set(key = key, value = queue)
     } else {
@@ -205,7 +205,7 @@ read_keyvalue_pairs <- function(conn, rules, item_list, expected_items, as_data_
   })
 
   # turn results into data.frame
-  if( as_data_frame ) {
+  if ( as_data_frame ) {
     keys <- re$keys()
     re <- structure(
       lapply(keys, function(key) {

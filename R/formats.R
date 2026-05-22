@@ -19,11 +19,11 @@ format.readNSx_specification <- function(x, ...) {
   spec <- x$specification
   section_names <- names(spec)
   s <- sprintf("<Blackrock [%s] specification version [%s]>", x$type, x$version)
-  for(snm in section_names) {
+  for (snm in section_names) {
     section <- spec[[ snm ]]
     s <- c(s, section$description[[ length(section$description) ]])
     item_names <- names(section$dictionary)
-    for(inm in item_names) {
+    for (inm in item_names) {
       item <- section$dictionary[[ inm ]]
       s <- c(
         s, sprintf(
@@ -63,7 +63,7 @@ format.readNSx_nev_extended_header <- function(x, ...) {
     sapply(nms, function(nm) {
       tbl <- x[[nm]]
       cnames <- names(tbl)
-      if(length(cnames) > 3) {
+      if (length(cnames) > 3) {
         cnames <- c(cnames[1:3], "...")
       }
       cnames <- paste(cnames, collapse = ", ")
@@ -88,7 +88,7 @@ format.readNSx_nev <- function(x, ...) {
     sprintf("  Event types: %s", paste(x$event_types, collapse = ", "))
   )
   excluded <- attr(x, "packets_excluded")
-  if(length(excluded)) {
+  if (length(excluded)) {
     s <- c(s, sprintf("  Excluded event types: %s", deparse_svec(excluded)))
   }
   paste(s, collapse = "\n")
@@ -107,7 +107,7 @@ format.readNSx_nsx_basic_header <- function(x, ...) {
     sprintf("  Time origin: %04d-%02d-%02d %02d:%02d:%02d %03.0fms",
             ts[[1]], ts[[2]], ts[[4]], ts[[5]], ts[[6]], ts[[7]], ts[[8]])
   )
-  if( nzchar(comments) ) {
+  if ( nzchar(comments) ) {
     s <- c(s, sprintf("  Comments: %s", comments))
   }
 
@@ -122,12 +122,12 @@ format.readNSx_nsx_extended_header <- function(x, ...) {
     sapply(nms, function(nm) {
       tbl <- x[[nm]]
       cnames <- names(tbl)
-      if("electrode_id" %in% cnames) {
+      if ("electrode_id" %in% cnames) {
         s <- sprintf("  - %s (%d x %d, channels: %s): ", nm, nrow(tbl), ncol(tbl), deparse_svec(tbl$electrode_id))
       } else {
         s <- sprintf("  - %s (%d x %d): ", nm, nrow(tbl), ncol(tbl))
       }
-      if(length(cnames) > 3) {
+      if (length(cnames) > 3) {
         cnames <- c(cnames[1:3], "...")
       }
       cnames <- paste(cnames, collapse = ", ")
@@ -152,7 +152,7 @@ format.readNSx_nsx <- function(x, ...) {
 
 format_h5_datasets <- function(x, sep = "$") {
 
-  if(!inherits(x, "readNSx_h5_datasets")) { return("") }
+  if (!inherits(x, "readNSx_h5_datasets")) { return("") }
 
   s <- unlist(lapply(names(x), function(nm) {
     d <- x[[nm]]

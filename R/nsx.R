@@ -4,7 +4,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
 
   # get "x" in NSx
   which_nsx <- tolower(substring(path, nchar(path) - 2))
-  if(!which_nsx %in% sprintf("ns%d", seq_len(9))) {
+  if (!which_nsx %in% sprintf("ns%d", seq_len(9))) {
     stop("read_nsx: path must ends with .ns1 to .ns9")
   }
 
@@ -13,17 +13,17 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
 
   path <- normalizePath(path, winslash = "/", mustWork = TRUE)
 
-  if(missing(spec) || is.null(spec)) {
+  if (missing(spec) || is.null(spec)) {
     ftype <- get_file_type(path = path)
     spec <- get_specification(ftype$version, "nsx")
-  } else if(!inherits(spec, "readNSx_specification_nsx")) {
+  } else if (!inherits(spec, "readNSx_specification_nsx")) {
     stop("[readNSx::read_nsx] `spec` must inherit class [readNSx_specification_nsx]. If you don't know what that is, leave this argument blank or NULL")
   }
 
   file_size <- file.size(path)
   file_name <- basename(path)
 
-  if(!length(prefix)) {
+  if (!length(prefix)) {
     prefix <- normalizePath(path)
   }
 
@@ -35,7 +35,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
   on.exit({
     tryCatch({
       close(conn)
-    }, error = function(...){})
+    }, error = function(...) {})
   }, add = TRUE, after = TRUE)
 
   # Obtain basic header information
@@ -115,7 +115,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
   # Calculate digital to analog transformation
   units <- sapply(header_extended$CC$units[seq_len(n_channels)], function(unit) {
     rate <- physical_unit_lut[[unit]]
-    if(length(rate) != 1) { rate <- 1 }
+    if (length(rate) != 1) { rate <- 1 }
     rate
   })
   min_digit <- header_extended$CC$min_digital_value[seq_len(n_channels)]
@@ -129,7 +129,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
   start_time <- 0
 
   # Read data (all at once - limited by R's vector length 2^31-1)
-  if(header_basic$file_spec[[1]] >= 3) {
+  if (header_basic$file_spec[[1]] >= 3) {
     nsx_signal_data <- readNSxDataPacket30(
       filePath = path, nBytes = data_bytes, sampleRate = sample_rate,
       nChannels = n_channels, skipBytes = header_basic$bytes_in_headers,
@@ -160,7 +160,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
 
     filename <- sprintf("%s_ieeg%s%d", export_filebase, partition_prefix, current_partition)
 
-    if( header_basic$file_spec[[1]] >= 3 ) {
+    if ( header_basic$file_spec[[1]] >= 3 ) {
       start_time <- time_range[[1]]
     }
 
@@ -174,7 +174,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
       internal_partition_key = sprintf("%s__part%s", file_name, current_partition)
     )
     dir <- file.path(export_root, filename)
-    if(fresh_start && dir.exists(dir)) {
+    if (fresh_start && dir.exists(dir)) {
       unlink(dir, recursive = TRUE, force = TRUE)
     }
     dir_create2(dir)
@@ -230,7 +230,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
 
   # get "x" in NSx
   which_nsx <- tolower(substring(path, nchar(path) - 2))
-  if(!which_nsx %in% sprintf("ns%d", seq_len(9))) {
+  if (!which_nsx %in% sprintf("ns%d", seq_len(9))) {
     stop("read_nsx: path must ends with .ns1 to .ns9")
   }
 
@@ -248,17 +248,17 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
 
   path <- normalizePath(path, winslash = "/", mustWork = TRUE)
 
-  if(missing(spec) || is.null(spec)) {
+  if (missing(spec) || is.null(spec)) {
     ftype <- get_file_type(path = path)
     spec <- get_specification(ftype$version, "nsx")
-  } else if(!inherits(spec, "readNSx_specification_nsx")) {
+  } else if (!inherits(spec, "readNSx_specification_nsx")) {
     stop("[readNSx::read_nsx] `spec` must inherit class [readNSx_specification_nsx]. If you don't know what that is, leave this argument blank or NULL")
   }
 
   file_size <- file.size(path)
   file_name <- basename(path)
 
-  if(!length(prefix)) {
+  if (!length(prefix)) {
     prefix <- normalizePath(path)
   }
 
@@ -271,7 +271,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   on.exit({
     tryCatch({
       close(conn)
-    }, error = function(...){})
+    }, error = function(...) {})
   }, add = TRUE, after = TRUE)
 
   # Obtain basic header information
@@ -351,7 +351,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   # Calculate digital to analog transformation
   units <- sapply(header_extended$CC$units[seq_len(n_channels)], function(unit) {
     rate <- physical_unit_lut[[unit]]
-    if(length(rate) != 1) { rate <- 1 }
+    if (length(rate) != 1) { rate <- 1 }
     rate
   })
   min_digit <- header_extended$CC$min_digital_value[seq_len(n_channels)]
@@ -365,7 +365,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   # =============================================================================
   # Step 1: Scan file to get packet structure (no data loaded into memory)
   # =============================================================================
-  if(header_basic$file_spec[[1]] >= 3) {
+  if (header_basic$file_spec[[1]] >= 3) {
     packet_info <- scanNSxPackets30(
       filePath = path, nBytes = data_bytes,
       nChannels = n_channels, skipBytes = header_basic$bytes_in_headers
@@ -389,16 +389,16 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   # Find partition breaks: when there's a gap in expected timestamps
   # (i.e., packets are not contiguous)
   partition_indices <- list()
-  if(length(timestamps_sec) > 0) {
+  if (length(timestamps_sec) > 0) {
     current_partition_start <- 1
-    for(i in seq_along(timestamps_sec)[-1]) {
+    for (i in seq_along(timestamps_sec)[-1]) {
       # Expected time based on previous packet's end
-      expected_time <- timestamps_sec[i-1] + n_data_points[i-1] / sample_rate
+      expected_time <- timestamps_sec[i - 1] + n_data_points[i - 1] / sample_rate
       actual_time <- timestamps_sec[i]
       # Allow small tolerance (2 samples)
-      if(abs(actual_time - expected_time) > 2 / sample_rate) {
+      if (abs(actual_time - expected_time) > 2 / sample_rate) {
         # Gap detected, end current partition
-        partition_indices <- c(partition_indices, list(current_partition_start:(i-1)))
+        partition_indices <- c(partition_indices, list(current_partition_start:(i - 1)))
         current_partition_start <- i
       }
     }
@@ -437,7 +437,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
       internal_partition_key = sprintf("%s__part%s", file_name, current_partition)
     )
     dir <- file.path(export_root, filename)
-    if(fresh_start && dir.exists(dir)) {
+    if (fresh_start && dir.exists(dir)) {
       unlink(dir, recursive = TRUE, force = TRUE)
     }
     dir_create2(dir)
@@ -477,14 +477,14 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
     chunk_size <- getOption("readNSx.chunk_size", 1000000L)
 
     write_offset <- 1L
-    for(pkt_i in seq_along(packet_idx)) {
+    for (pkt_i in seq_along(packet_idx)) {
       pkt_idx <- packet_idx[[pkt_i]]
       pkt_n_points <- n_data_points[[pkt_idx]]
       pkt_byte_offset <- byte_offsets[[pkt_idx]]
 
       # Sub-chunk within this packet if it's large
       sample_offset <- 0L
-      while(sample_offset < pkt_n_points) {
+      while (sample_offset < pkt_n_points) {
         # Calculate how many samples to read in this chunk
         samples_remaining <- pkt_n_points - sample_offset
         samples_to_read <- min(chunk_size, samples_remaining)
@@ -502,7 +502,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
         )
 
         # Write each channel's chunk to its HDF5 file
-        for(ii in seq_len(n_channels)) {
+        for (ii in seq_len(n_channels)) {
           write_h5_slice(
             x = pkt_data[ii, ],
             file = h5_files[[ii]],
@@ -526,13 +526,13 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   #   packet_header <- packet_header[[1]]
   #   data_bytes <- data_bytes - header_item$.bytes
   #
-  #   if( !isTRUE(packet_header$header == 1) ) {
+  #   if ( !isTRUE(packet_header$header == 1) ) {
   #     warning("NSx has invalid data header: the header must starts with 0x01. The data might be incomplete.")
   #     break
   #   }
   #
   #   n_sample_points <- packet_header$number_of_data_points
-  #   if( n_sample_points <= 0 ) {
+  #   if ( n_sample_points <= 0 ) {
   #     warning("NSx: detected zero-length signals; skipping.")
   #     next
   #   }
@@ -540,7 +540,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   #   item$n <- n_sample_points * n_channels
   #   item <- do.call(validate_spec, item)
   #
-  #   if( item$.bytes > data_bytes ) {
+  #   if ( item$.bytes > data_bytes ) {
   #     warning("NSx: requested data length is greater than the file size. The data might be incomplete.")
   #     break
   #   }
@@ -558,7 +558,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   #   # write to disk
   #   filename <- sprintf("%s_ieeg%s%d", export_filebase, partition_prefix, current_partition)
   #   dir <- file.path(export_root, filename)
-  #   if(fresh_start && dir.exists(dir)) {
+  #   if (fresh_start && dir.exists(dir)) {
   #     unlink(dir, recursive = TRUE, force = TRUE)
   #   }
   #   dir_create2(dir)

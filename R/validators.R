@@ -2,8 +2,8 @@
 validate_spec <- function(name, type, size, n = 1, names = NULL, ...) {
   # check type first
   size_ <- byte_size_lut[[type]]
-  if(!missing(size) && length(size) == 1) {
-    if(!is.null(size_) && !size %in% size_) {
+  if (!missing(size) && length(size) == 1) {
+    if (!is.null(size_) && !size %in% size_) {
       stop("Cannot parse name [", name, "]: the type [", type, "] cannot have ", size, " bytes.")
     }
     size_ <- size
@@ -12,7 +12,7 @@ validate_spec <- function(name, type, size, n = 1, names = NULL, ...) {
   } else {
     size_ <- size_[[1]]
   }
-  if(!length(n)) {
+  if (!length(n)) {
     n <- 1L
   } else {
     n <- as.integer(n)

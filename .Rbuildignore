@@ -8,3 +8,6 @@
 ^CRAN-SUBMISSION$
 ^inst/origDocs$
 ^adhoc$
+^\.positai$
+^\.claude$
+^\.lintr$

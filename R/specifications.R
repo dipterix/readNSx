@@ -110,10 +110,10 @@ get_file_type <- function( path ) {
 get_specification <- function(version, type = c("nev", "nsx")) {
   type <- match.arg(type)
   version <- as.character(version)
-  if(!length(version) || any(is.na(version))) {
+  if (!length(version) || any(is.na(version))) {
     stop("readNSx: blackrock_specification version must be valid.")
   }
-  if(length(version) >= 2) {
+  if (length(version) >= 2) {
     version <- sprintf("%s.%s", version[[1]], version[[2]])
   }
 
@@ -122,7 +122,7 @@ get_specification <- function(version, type = c("nev", "nsx")) {
     package = "readNSx", "specifications",
     sprintf("blackrock-%s-%s.json", type, version))
 
-  if( spec_file == "" ) {
+  if ( spec_file == "" ) {
     stop(sprintf("readNSx: cannot find specification configuration for [%s] with version [%s]. Supported versions are 2.2, 2.3, and 3.0. For older file versions (2.0 and 2.1), I cannot find their specification files anywhere online. Please file an issue ticket on my Github repository if you have the specification file and would like to add support.", type, version))
   }
 

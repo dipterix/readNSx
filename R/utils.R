@@ -1,102 +1,103 @@
-parse_svec <- function(text, sep = ',', connect = '-:|', sort = FALSE, unique = TRUE){
-  connect <- unique(unlist(strsplit(connect, '')))
-  connect[connect %in% c('|', ':', '~')] <- paste0('\\', connect[connect %in% c('|', ':', '~')])
-  if('-' %in% connect) {
+parse_svec <- function(text, sep = ",", connect = "-:|", sort = FALSE, unique = TRUE) {
+  connect <- unique(unlist(strsplit(connect, "")))
+  connect[connect %in% c("|", ":", "~")] <- paste0("\\", connect[connect %in% c("|", ":", "~")])
+  if ("-" %in% connect) {
     connect <- c(connect[connect != "-"], "-")
   }
-  connect <- paste(connect, collapse = '')
+  connect <- paste(connect, collapse = "")
 
-  if(length(text) != 1) {
+  if (length(text) != 1) {
     text <- paste(text, collapse = sep)
   }
 
 
-  if(length(text) == 0 || !nzchar(trimws(text))){
+  if (length(text) == 0 || !nzchar(trimws(text))) {
     return(NULL)
   }
 
-  if(is.numeric(text)){
-    if(unique) {
+  if (is.numeric(text)) {
+    if (unique) {
       text <- unique(text)
     }
-    if(sort) {
+    if (sort) {
       text <- sort(text)
     }
     return(text)
   }
   s <- unlist(strsplit(text, sep, perl = TRUE))
   s <- trimws(s)
-  s <- s[s!='']
+  s <- s[s != ""]
 
-  s <- s[grepl(sprintf('^[0-9\\ %s]+$', connect), s)]
-  # s <- s[str_detect(s, sprintf('^[0-9\\ %s]+$', connect))]
+  s <- s[grepl(sprintf("^[0-9\\ %s]+$", connect), s)]
+  # s <- s[str_detect(s, sprintf("^[0-9\\ %s]+$", connect))]
 
   re <- NULL
-  for(ss in s){
-    if(grepl(sprintf('[%s]', connect), ss)){
-      ss <- unlist(strsplit(ss,  sprintf('[%s]', connect), perl = TRUE))
-      # ss <- as.vector(stringr::str_split(ss, sprintf('[%s]', connect), simplify = TRUE))
+  for (ss in s) {
+    if (grepl(sprintf("[%s]", connect), ss)) {
+      ss <- unlist(strsplit(ss,  sprintf("[%s]", connect), perl = TRUE))
+      # ss <- as.vector(stringr::str_split(ss, sprintf("[%s]", connect), simplify = TRUE))
       ss <- trimws(ss)
-      ss <- ss[grepl('^[0-9]+$', ss)]
+      ss <- ss[grepl("^[0-9]+$", ss)]
       ss <- as.numeric(ss)
       ss <- ss[!is.na(ss)]
-      if(length(ss) >= 2){
+      if (length(ss) >= 2) {
         re <- c(re, (ss[1]:ss[2]))
       }
-    }else{
+    } else {
       re <- c(re, as.numeric(ss))
     }
   }
 
-  if(unique){
+  if (unique) {
     re <- unique(re)
   }
 
-  if(sort){
+  if (sort) {
     re <- sort(re)
   }
 
   return(re)
 }
 
-deparse_svec <- function(nums, connect = '-', concatenate = TRUE, collapse = ',', max_lag = 1){
+deparse_svec <- function(nums, connect = "-", concatenate = TRUE, collapse = ",", max_lag = 1) {
   nums <- nums[is.finite(nums)]
-  if(length(nums) == 0){
-    return('')
+  if (length(nums) == 0) {
+    return("")
   }
   alag <- seq_len(max(1, max_lag))
   nums <- sort(unique(nums))
-  lg <- c(NA, nums)[seq_len(length(nums))]
+  lg <- c(NA, nums)[seq_along(nums)]
   ind <- nums - lg
   ind[1] <- 0
   ind2 <- c(ind[-1], -1)
-  re <- apply(cbind(nums[!ind %in% alag], nums[!ind2 %in% alag]), 1,function(x){
-    if(x[1] == x[2]){
+  re <- apply(cbind(nums[!ind %in% alag], nums[!ind2 %in% alag]), 1, function(x) {
+
+    if (x[1] == x[2]) {
       as.character(x[1])
-    }else{
+    } else {
       paste(x, collapse = connect)
     }
   })
-  if(concatenate){
+  if (concatenate) {
     re <- paste(re, collapse = collapse)
   }
   re
 }
 
-fileexts <- function(file){
+fileexts <- function(file) {
   x <- basename(file)
-  sapply(strsplit(file, '\\.'), function(x){
+  sapply(strsplit(file, "\\."), function(x) {
     l <- length(x)
-    ifelse(l > 1, x[[l]], '')
+    ifelse(l > 1, x[[l]], "")
   })
 }
 
 backup_file <- function(path, backup_folder = dirname(path), remove = FALSE) {
 
-  if(length(path) != 1 || is.na(path)) {
+  if (length(path) != 1 || is.na(path)) {
     return(invisible(FALSE))
   }
-  if(!file.exists(path)){ return(invisible(FALSE)) }
+  if (!file.exists(path)) { return(invisible(FALSE)) }
 
   path <- normalizePath(path, mustWork = TRUE, winslash = "/")
 
@@ -107,7 +108,7 @@ backup_file <- function(path, backup_folder = dirname(path), remove = FALSE) {
 
   bname <- basename(path)
 
-  if(ext == '') {
+  if (ext == "") {
     bname <- gsub("[/]+$", "", bname)
   } else {
     bname <- substr(bname, start = 1L, stop = nchar(bname) - nchar(ext) - 1)
@@ -124,14 +125,14 @@ backup_file <- function(path, backup_folder = dirname(path), remove = FALSE) {
   )
   path2 <- file.path(backup_folder, bname2)
 
-  if(!dir.exists(backup_folder)) {
+  if (!dir.exists(backup_folder)) {
     dir.create(backup_folder, showWarnings = FALSE, recursive = TRUE)
   }
 
-  if( remove ) {
+  if ( remove ) {
     file.rename(from = path, to = path2)
   } else {
-    if(is_dir) {
+    if (is_dir) {
       dir.create(path2, showWarnings = FALSE, recursive = TRUE)
       file.copy(
         from = list.files(
@@ -152,24 +153,24 @@ backup_file <- function(path, backup_folder = dirname(path), remove = FALSE) {
 }
 
 append_table <- function(old_tbl, new_tbl, index_column = NULL, obsolete_values = NULL) {
-  if(length(index_column) > 1) {
+  if (length(index_column) > 1) {
     stop("`append_table`: length of `index_column` cannot exceed 1")
   }
-  if(is.data.frame(old_tbl) && nrow(old_tbl)) {
+  if (is.data.frame(old_tbl) && nrow(old_tbl)) {
     nms <- names(new_tbl)
     col_sel <- names(old_tbl) %in% nms
     old_tbl <- as.data.frame(old_tbl)
 
-    if(!length(index_column) || !length(obsolete_values) || !index_column %in% names(old_tbl)) {
+    if (!length(index_column) || !length(obsolete_values) || !index_column %in% names(old_tbl)) {
       old_tbl <- old_tbl[, col_sel, drop = FALSE]
     } else {
       old_tbl <- old_tbl[!old_tbl[[index_column]] %in% obsolete_values, col_sel, drop = FALSE]
     }
 
-    if(nrow(old_tbl)) {
+    if (nrow(old_tbl)) {
       nms <- nms[!nms %in% names(old_tbl)]
-      if(length(nms)) {
-        for(nm in nms) {
+      if (length(nms)) {
+        for (nm in nms) {
           old_tbl[[nm]] <- NA
         }
       }
@@ -186,9 +187,9 @@ append_table <- function(old_tbl, new_tbl, index_column = NULL, obsolete_values 
 append_table_rds <- function(
     path, new_tbl, index_column = NULL, obsolete_values = NULL, save_tsv = TRUE) {
 
-  if(!is.data.frame(new_tbl) || nrow(new_tbl) == 0)  { return() }
+  if (!is.data.frame(new_tbl) || nrow(new_tbl) == 0)  { return() }
 
-  if(file.exists(path)) {
+  if (file.exists(path)) {
     old_tbl <- tryCatch({
       readRDS(path)
     }, error = function(e) { NULL })
@@ -202,7 +203,7 @@ append_table_rds <- function(
   backup_file(path, backup_folder = file.path(dirname(path), "backups"), remove = TRUE)
   saveRDS(combined_tbl, file = path)
 
-  if( save_tsv ) {
+  if ( save_tsv ) {
     tsv_path <- sprintf("%s.tsv", gsub("\\.rds$", "", x = path, ignore.case = TRUE))
     utils::write.table(
       file = tsv_path,
@@ -223,7 +224,7 @@ dir_create2 <- function(x, showWarnings = FALSE, recursive = TRUE, check = TRUE,
     dir.create(x, showWarnings = showWarnings, recursive = recursive, ...)
   }
   if (check && !dir.exists(x)) {
-    stop('Cannot create directory at ', shQuote(x))
+    stop("Cannot create directory at ", shQuote(x))
   }
   invisible(normalizePath(x))
 }
@@ -266,13 +267,14 @@ str_match <- function(x, pattern, ...) {
     return(TRUE)
   })
   if (isnull) { return() }
-  if(is.function(value)) {
+  if (is.function(value)) {
     value <- value(lhs)
   }
   eval(as.call(list(quote(`<-`), expr, value)), envir = env)
 }
 
-`%?<-%` <- function (lhs, value) {
+`%?<-%` <- function(lhs, value) {
+
   env <- parent.frame()
   lhs <- substitute(lhs)
   isnull <- tryCatch({

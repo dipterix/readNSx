@@ -6,10 +6,10 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   # spec <- get_specification(ftype$version, "nev")
   # exclude_events = "spike"
 
-  if(missing(spec) || is.null(spec)) {
+  if (missing(spec) || is.null(spec)) {
     ftype <- get_file_type(path = path)
     spec <- get_specification(ftype$version, "nev")
-  } else if(!inherits(spec, "readNSx_specification_nev")) {
+  } else if (!inherits(spec, "readNSx_specification_nev")) {
     stop("[readNSx::read_nev] `spec` must inherit class [readNSx_specification_nev]. If you don't know what that is, leave this argument blank or NULL")
   }
 
@@ -17,7 +17,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   file_size <- file.size(path)
   exclude_events <- tolower(exclude_events)
 
-  if(!length(prefix)) {
+  if (!length(prefix)) {
     prefix <- normalizePath(path)
   }
 
@@ -27,7 +27,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
   conn <- file(path, "rb")
   on.exit({
-    tryCatch({ close(conn) }, error = function(...){})
+    tryCatch({ close(conn) }, error = function(...) {})
   }, add = TRUE, after = TRUE)
 
 
@@ -38,8 +38,8 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   )
 
   # Fixing NEV 3.0 file bug
-  if(identical(paste(header_basic$file_spec, collapse = "."), "3.0")) {
-    if( header_basic$time_resolution_timestamp < 30000 ) {
+  if (identical(paste(header_basic$file_spec, collapse = "."), "3.0")) {
+    if ( header_basic$time_resolution_timestamp < 30000 ) {
       header_basic$time_resolution_timestamp <- 30000
     }
   }
@@ -81,9 +81,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   extra_path <- file.path(export_root, sprintf("%s_events", export_filebase))
   dir_create2(extra_path)
 
-  for(nm in names(header_extended)) {
+  for (nm in names(header_extended)) {
     tbl <- header_extended[[nm]]
-    if(nm == "NEUEVLBL") {
+    if (nm == "NEUEVLBL") {
       tbl$filename <- channel_filename(
         channel_id = tbl$electrode_id,
         channel_label = tbl$label)
@@ -119,7 +119,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   )
 
 
-  if( data_packet_bytes <= 0) {
+  if ( data_packet_bytes <= 0) {
     saveRDS(nev_data, file = file.path(extra_path, "nev-headers.rds"))
     return( nev_data )
   }
@@ -128,14 +128,14 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   # since the file is not compressed, we can estimate how many data packets
   # get estimated
   npackets <- (file_size - header_basic$bytes_in_headers) / data_packet_bytes
-  if( abs(npackets - round(npackets)) > 1e-4 ) {
+  if ( abs(npackets - round(npackets)) > 1e-4 ) {
     warning("Number of data packets in the NEV file is not an integer. The data packets might be incomplete")
     npackets <- floor(npackets)
   } else {
     npackets <- round(npackets)
   }
 
-  if( npackets <= 0 ) {
+  if ( npackets <= 0 ) {
     saveRDS(nev_data, file = file.path(extra_path, "nev-headers.rds"))
     return( nev_data )
   }
@@ -145,9 +145,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   item_list <- spec$specification$section3$dictionary
   dict <- fastmap::fastmap()
 
-  for(key in names(item_list)) {
+  for (key in names(item_list)) {
     item <- item_list[[key]]
-    if(!item$event %in% exclude_events) {
+    if (!item$event %in% exclude_events) {
       item$name <- key
       item <- do.call(validate_spec, item)
       packet_ids <- parse_svec(key)
@@ -155,8 +155,8 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
         item$name <- id
         dict$set(as.character(id), item)
       })
-      if(!data_packets$has( item$event )) {
-        data_packets$set( item$event , fastmap::fastqueue() )
+      if (!data_packets$has( item$event )) {
+        data_packets$set( item$event, fastmap::fastqueue() )
       }
     }
   }
@@ -170,14 +170,14 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   key_idx <- rules$start_byte + seq_len(rules$.bytes)
   waveform_lut <- as.data.frame(header_extended$NEUEVWAV)
   tryCatch({
-    waveform_lut <- waveform_lut[,c("electrode_id", "digitization_factor", "bytes_per_waveform")]
-  }, error = function(e){})
+    waveform_lut <- waveform_lut[, c("electrode_id", "digitization_factor", "bytes_per_waveform")]
+  }, error = function(e) {})
   waveform_flag <- header_basic$additional_flags == 1
   waveform_lengths <- apply(buf, 2, function(data) {
     # DIPSAUS DEBUG START
     # data <- buf[,1]
     key <- as.character(parse_key( data[ key_idx ] ))
-    if(is.na(key) || !dict$has(key)) { return(0) }
+    if (is.na(key) || !dict$has(key)) { return(0) }
     item <- dict$get(key)
 
     packet <- parse_item(data, item = item)
@@ -185,15 +185,15 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     value <- packet$value
     waveform_size <- 0
     tryCatch({
-      if( identical(value$event, "spike") ) {
+      if ( identical(value$event, "spike") ) {
 
         waveform_setting <- waveform_lut[waveform_lut$electrode_id == value$packet_id, ]
 
-        if( waveform_flag ) {
+        if ( waveform_flag ) {
           spike_data <- parse_int16(value$waveform)
         } else {
           byte_size <- waveform_setting$bytes_per_waveform[[1]]
-          if( byte_size <= 0 ) { byte_size <- 1 }
+          if ( byte_size <= 0 ) { byte_size <- 1 }
           spike_data <- switch(
             as.character(byte_size),
             "1" = {
@@ -214,8 +214,8 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
       }
 
-      if( identical(value$event, "digital_inputs") ) {
-        if(length(value$packet_insertion_reason)) {
+      if ( identical(value$event, "digital_inputs") ) {
+        if (length(value$packet_insertion_reason)) {
           value$packet_insertion_reason <- paste(
             value$packet_insertion_reason,
             collapse = " "
@@ -237,9 +237,9 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
   waveform_maxlen <- max(waveform_lengths)
 
   # save data_packets
-  for(event_type in data_packets$keys()) {
+  for (event_type in data_packets$keys()) {
     queue <- data_packets$get(event_type)
-    if( event_type == "spike" ) {
+    if ( event_type == "spike" ) {
 
       nev_data$event_types <- c(nev_data$event_types, "spike")
 
@@ -249,7 +249,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
       waveform_data <- sapply(seq_len(queue$size()), function(ii) {
         spike <- queue$remove()
         waveform <- spike$waveform
-        if(length(waveform) < waveform_maxlen) {
+        if (length(waveform) < waveform_maxlen) {
           waveform <- c(waveform, rep(0, waveform_maxlen - length(waveform)))
         }
         c(
@@ -270,11 +270,11 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
 
       save_h5(x = as.integer(waveform_data[3, ]), file = waveform_path, name = "classification", replace = TRUE, level = 9, ctype = "integer", quiet = TRUE, chunk = 16384L)
 
-      if( waveform_maxlen > 0 ) {
+      if ( waveform_maxlen > 0 ) {
         save_h5(x = as.double(waveform_data[-(1:3), ]), file = waveform_path, name = "waveform", replace = TRUE, level = 0, ctype = "numeric", quiet = TRUE)
       }
 
-    } else if( queue$size() > 0 ) {
+    } else if ( queue$size() > 0 ) {
 
       nev_data$event_types <- c(nev_data$event_types, event_type)
 

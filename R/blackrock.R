@@ -73,10 +73,10 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
 
   # set up progress
   inc_progress <- function( details, topic = NULL ) {
-    if( is.atomic(verbose) ) {
+    if ( is.atomic(verbose) ) {
       topic <- paste(topic, collapse = "")
-      if( verbose ) {
-        if(nzchar(topic)) { topic <- sprintf("%s - ", topic) }
+      if ( verbose ) {
+        if (nzchar(topic)) { topic <- sprintf("%s - ", topic) }
         message( topic, details )
       }
       return()
@@ -85,7 +85,7 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
       # progress bar: shiny, dipsaus::progress2, or shidashi::shiny_progress
       tryCatch({
         verbose$inc( details, topic )
-      }, error = function(...){})
+      }, error = function(...) {})
 
     }
 
@@ -94,7 +94,7 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
   # check path
   path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRUE)
 
-  if(length(prefix) != 1 || is.na(prefix) || !nzchar(trimws(prefix))) {
+  if (length(prefix) != 1 || is.na(prefix) || !nzchar(trimws(prefix))) {
     prefix <- path_pattern
   }
 
@@ -107,25 +107,25 @@ import_nsp <- function(path, prefix = NULL, exclude_events = "spike",
   n_nsx <- sum(file.exists(path_nsx))
 
   msg <- sprintf("Found [%d] .nev file(s) and [%d] .nsx file(s)", length(path_nev), n_nsx)
-  if(length(path_nev) + n_nsx == 0) {
+  if (length(path_nev) + n_nsx == 0) {
     stop("No .nev nor .ns1-9 file found. Please check your file paths.")
   }
   inc_progress(msg, "Importing Blackrock")
 
   results <- structure(list(), class = "readNSx_collection")
 
-  if(length(path_nev)) {
+  if (length(path_nev)) {
     inc_progress(sprintf("Excluding %s", paste(exclude_events, collapse = ", ")), "Importing NEV")
     results$nev <- read_nev(path = path_nev, prefix = prefix, exclude_events = exclude_events)
   } else {
     inc_progress("No NEV file found: skipping", "Importing NEV")
   }
 
-  for(path in path_nsx) {
+  for (path in path_nsx) {
     nsx <- substring(path, nchar(path) - 2)
-    if(file.exists(path)) {
+    if (file.exists(path)) {
       inc_progress(sprintf("Parsing %s", nsx), "Importing NSx")
-      if(isTRUE(getOption("ieegio.legacy.read_nsx", FALSE))) {
+      if (isTRUE(getOption("ieegio.legacy.read_nsx", FALSE))) {
         results[[nsx]] <- read_nsx_legacy(path = path, prefix = prefix, partition_prefix = partition_prefix)
       } else {
         results[[nsx]] <- read_nsx(path = path, prefix = prefix, partition_prefix = partition_prefix)
@@ -172,7 +172,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   )
   all_files <- all_files[file.exists(all_files)]
 
-  if(length(all_files) == 0) {
+  if (length(all_files) == 0) {
     stop("No .nev or .nsx files found at path: ", path)
   }
 
@@ -182,16 +182,16 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   temp_legacy <- file.path(temp_base, "nsx_compare_legacy")
 
   # Clean up old temp dirs if they exist
-  if(dir.exists(temp_new)) unlink(temp_new, recursive = TRUE)
-  if(dir.exists(temp_legacy)) unlink(temp_legacy, recursive = TRUE)
+  if (dir.exists(temp_new)) unlink(temp_new, recursive = TRUE)
+  if (dir.exists(temp_legacy)) unlink(temp_legacy, recursive = TRUE)
 
   dir.create(temp_new, recursive = TRUE)
   dir.create(temp_legacy, recursive = TRUE)
 
-  if(verbose) message("Copying files to temporary directories...")
+  if (verbose) message("Copying files to temporary directories...")
 
   # Copy files to both temp directories
-  for(f in all_files) {
+  for (f in all_files) {
     fname <- basename(f)
     file.copy(f, file.path(temp_new, fname))
     file.copy(f, file.path(temp_legacy, fname))
@@ -206,7 +206,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   prefix_legacy <- file.path(temp_legacy, "output")
 
   # Run new method
-  if(verbose) message("Running new chunked method...")
+  if (verbose) message("Running new chunked method...")
   old_option <- getOption("ieegio.legacy.read_nsx")
   on.exit(options(ieegio.legacy.read_nsx = old_option), add = TRUE)
 
@@ -221,7 +221,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   )
 
   # Run legacy method
-  if(verbose) message("Running legacy method...")
+  if (verbose) message("Running legacy method...")
   options(ieegio.legacy.read_nsx = TRUE)
   result_legacy <- import_nsp(
     path = path_legacy,
@@ -233,7 +233,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   )
 
   # Compare results
-  if(verbose) message("Comparing results...")
+  if (verbose) message("Comparing results...")
 
   differences <- list()
   all_identical <- TRUE
@@ -241,20 +241,20 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
   # Compare each NSx
   nsx_names <- grep("^ns[1-9]$", names(result_new), value = TRUE)
 
-  for(nsx_name in nsx_names) {
+  for (nsx_name in nsx_names) {
     nsx_new <- result_new[[nsx_name]]
     nsx_legacy <- result_legacy[[nsx_name]]
 
-    if(is.null(nsx_new) && is.null(nsx_legacy)) next
+    if (is.null(nsx_new) && is.null(nsx_legacy)) next
 
-    if(is.null(nsx_new) || is.null(nsx_legacy)) {
+    if (is.null(nsx_new) || is.null(nsx_legacy)) {
       differences[[nsx_name]] <- "One result is NULL"
       all_identical <- FALSE
       next
     }
 
     # Compare number of partitions
-    if(nsx_new$nparts != nsx_legacy$nparts) {
+    if (nsx_new$nparts != nsx_legacy$nparts) {
       differences[[nsx_name]] <- sprintf(
         "Different number of partitions: new=%d, legacy=%d",
         nsx_new$nparts, nsx_legacy$nparts
@@ -267,8 +267,8 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
     n_channels <- nsx_new$header_basic$channel_count
     channel_diffs <- list()
 
-    for(part in seq_len(nsx_new$nparts)) {
-      for(ch in seq_len(n_channels)) {
+    for (part in seq_len(nsx_new$nparts)) {
+      for (ch in seq_len(n_channels)) {
         channel_id <- nsx_new$header_extended$CC$electrode_id[ch]
         channel_label <- nsx_new$header_extended$CC$electrode_label[ch]
 
@@ -283,7 +283,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
           fname
         )
 
-        if(!file.exists(path_data_new) || !file.exists(path_data_legacy)) {
+        if (!file.exists(path_data_new) || !file.exists(path_data_legacy)) {
           channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- "File missing"
           all_identical <- FALSE
           next
@@ -292,7 +292,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
         data_new <- load_h5(path_data_new, "data", ram = TRUE)
         data_legacy <- load_h5(path_data_legacy, "data", ram = TRUE)
 
-        if(length(data_new) != length(data_legacy)) {
+        if (length(data_new) != length(data_legacy)) {
           channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- sprintf(
             "Different lengths: new=%d, legacy=%d",
             length(data_new), length(data_legacy)
@@ -302,7 +302,7 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
         }
 
         max_diff <- max(abs(data_new - data_legacy))
-        if(max_diff > tolerance) {
+        if (max_diff > tolerance) {
           channel_diffs[[sprintf("part%d_ch%d", part, channel_id)]] <- sprintf(
             "Max difference: %g", max_diff
           )
@@ -311,13 +311,13 @@ path_pattern <- gsub("\\.(nev|ns[1-9])[\\\\/]{0,}$", "", path, ignore.case = TRU
       }
     }
 
-    if(length(channel_diffs) > 0) {
+    if (length(channel_diffs) > 0) {
       differences[[nsx_name]] <- channel_diffs
     }
   }
 
-  if(verbose) {
-    if(all_identical) {
+  if (verbose) {
+    if (all_identical) {
       message("SUCCESS: All results are identical (within tolerance ", tolerance, ")")
     } else {
       message("DIFFERENCES FOUND:")
@@ -351,19 +351,19 @@ get_nev <- function(x, ...) {
 
 #' @export
 get_nev.default <- function(x, ...) {
-  if(length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
+  if (length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
   # x is character - prefix
   x1 <- file.path(sprintf("%s_events", x), "nev-headers.rds")
-  if(!file.exists(x1)) {
+  if (!file.exists(x1)) {
     x <- gsub("\\.(nev|ns[1-9])$", "", x = x, ignore.case = TRUE)
     x1 <- file.path(sprintf("%s_events", x), "nev-headers.rds")
-    if(!file.exists(x1)) {
+    if (!file.exists(x1)) {
       warning("Cannot find header file: ", x1)
       return(NULL)
     }
   }
   nev <- readRDS(x1)
-  if(!inherits(nev, 'readNSx_nev')) {
+  if (!inherits(nev, "readNSx_nev")) {
     warning("Header file found, but it's not a valid NEV header.")
     return(NULL)
   }
@@ -408,25 +408,25 @@ get_nev.readNSx_collection <- function(x, ...) {
 #' @export
 get_event <- function(x, event_type, ...) {
   event_type <- tolower(event_type)
-  if(!inherits(x, c("readNSx_collection", "readNSx_nev"))) {
+  if (!inherits(x, c("readNSx_collection", "readNSx_nev"))) {
     # Don't trust the header, always reload
     x <- get_nev(x)
     x <- x$prefix
   }
   nev <- get_nev(x)
-  if(!inherits(nev, "readNSx_nev")) {
+  if (!inherits(nev, "readNSx_nev")) {
     stop("get_event: Cannot get NEV events as `x` contains invalid prefix. If you have ever moved/renamed your data, please reload header using updated prefix.")
   }
   event_path <- sprintf("%s_events", nev$prefix)
-  if(event_type == "spike") {
+  if (event_type == "spike") {
     spike_path <- file.path(event_path, "waveforms.h5")
-    if(!file.exists(spike_path)) { return(NULL) }
+    if (!file.exists(spike_path)) { return(NULL) }
     return(load_h5_all(spike_path))
   }
 
   event_file <- file.path(event_path, sprintf("event-%s.rds", event_type))
 
-  if(!file.exists(event_file)) { return(NULL) }
+  if (!file.exists(event_file)) { return(NULL) }
   return(readRDS(event_file))
 }
 
@@ -446,23 +446,23 @@ get_nsx <- function(x, which, ...) {
 
 #' @export
 get_nsx.default <- function(x, which, ...) {
-  if(length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
+  if (length(x) != 1 || is.na(x) || !is.character(x)) { return(NULL) }
   which <- tolower(as.character(which))
-  if(nchar(which) < 3) {
+  if (nchar(which) < 3) {
     which <- sprintf("ns%s", which)
   }
-  if(!which %in% sprintf("ns%d", seq_len(9))) { return(NULL) }
+  if (!which %in% sprintf("ns%d", seq_len(9))) { return(NULL) }
   # x is character - prefix
   x1 <- file.path(sprintf("%s_ieeg", x), sprintf("%s_summary.rds", which))
-  if(!file.exists(x1)) {
+  if (!file.exists(x1)) {
     x <- gsub("\\.(nev|ns[1-9])$", "", x = x, ignore.case = TRUE)
     x1 <- file.path(sprintf("%s_events", x), sprintf("%s_summary.rds", which))
-    if(!file.exists(x1)) {
+    if (!file.exists(x1)) {
       return(NULL)
     }
   }
   nsx <- readRDS(x1)
-  if(!inherits(nsx, 'readNSx_nsx')) {
+  if (!inherits(nsx, "readNSx_nsx")) {
     warning("Header file found, but it's not a valid NSx header.")
     return(NULL)
   }
@@ -473,10 +473,10 @@ get_nsx.default <- function(x, which, ...) {
 #' @export
 get_nsx.readNSx_nsx <- function(x, which, ...) {
   which <- tolower(as.character(which))
-  if(nchar(which) < 3) {
+  if (nchar(which) < 3) {
     which <- sprintf("ns%s", which)
   }
-  if(!identical(x$which, which)) { return(NULL) }
+  if (!identical(x$which, which)) { return(NULL) }
   return(x)
 }
 
@@ -488,7 +488,7 @@ get_nsx.readNSx_nev <- function(x, which, ...) {
 #' @export
 get_nsx.readNSx_collection <- function(x, which, ...) {
   which <- tolower(as.character(which))
-  if(nchar(which) < 3) {
+  if (nchar(which) < 3) {
     which <- sprintf("ns%s", which)
   }
   x[[which]]
@@ -510,7 +510,7 @@ get_nsx.readNSx_collection <- function(x, which, ...) {
 get_channel <- function(x, channel_id) {
 
   channel_id <- as.integer(channel_id)
-  if(length(channel_id) != 1 || is.na(channel_id)) {
+  if (length(channel_id) != 1 || is.na(channel_id)) {
     stop("readNSX::get_channel: invalid `channel_id`, must be an integer of length 1")
   }
 
@@ -518,10 +518,10 @@ get_channel <- function(x, channel_id) {
   nsx <- NULL
 
   # get nsx in reverse order
-  for(which in rev(seq_len(9))) {
+  for (which in rev(seq_len(9))) {
     nsx <- get_nsx(x, which = which)
-    if(inherits(nsx, "readNSx_nsx")) {
-      if(channel_id %in% nsx$header_extended$CC$electrode_id) {
+    if (inherits(nsx, "readNSx_nsx")) {
+      if (channel_id %in% nsx$header_extended$CC$electrode_id) {
         channel_info <- nsx$header_extended$CC[
           nsx$header_extended$CC$electrode_id == channel_id,
         ]
@@ -529,7 +529,7 @@ get_channel <- function(x, channel_id) {
         channel_info$sample_rate_signal <- 30000 / nsx$header_basic$period
         channel_info$sample_rate_timestamp <- nsx$header_basic$time_resolution_timestamp
         channel_info$which_nsp <- which
-        if(length(nsx$partition_prefix) != 1) {
+        if (length(nsx$partition_prefix) != 1) {
           nsx$partition_prefix <- "/part"
         }
         break
@@ -537,10 +537,10 @@ get_channel <- function(x, channel_id) {
     }
   }
 
-  if(is.null(channel_info)) { return(NULL) }
+  if (is.null(channel_info)) { return(NULL) }
 
   # make sure using the first one
-  channel_info <- channel_info[1,]
+  channel_info <- channel_info[1, ]
 
   channel_filename <- channel_filename(
     channel_id = channel_info$electrode_id,
@@ -553,7 +553,7 @@ get_channel <- function(x, channel_id) {
   data <- structure(
     lapply(seq_len(nsx$nparts), function(ii) {
       fpath <- file.path(sprintf("%s%d", partition_path_prefix, ii), channel_filename)
-      if(!file.exists(fpath)) {
+      if (!file.exists(fpath)) {
         return(NULL)
       }
       list(
@@ -584,7 +584,7 @@ get_channel <- function(x, channel_id) {
 #' @export
 get_nsp <- function(x) {
   nev <- get_nev(x)
-  if(!inherits(nev, "readNSx_nev")) {
+  if (!inherits(nev, "readNSx_nev")) {
     stop("readNSx::get_nsp: Cannot obtain the NEV header information")
   }
 
@@ -595,7 +595,7 @@ get_nsp <- function(x) {
 
   lapply(seq_len(9), function(ii) {
     nsx <- get_nsx(nev, which = ii)
-    if(inherits(nsx, "readNSx_nsx")) {
+    if (inherits(nsx, "readNSx_nsx")) {
       re[[ sprintf("ns%d", ii) ]] <<- nsx
     }
   })

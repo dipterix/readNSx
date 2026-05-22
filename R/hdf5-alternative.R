@@ -1,7 +1,7 @@
 
 LazyFakeH5Internal <- R6::R6Class(
   inherit = LazyH5Internal,
-  classname = 'LazyFakeH5Internal',
+  classname = "LazyFakeH5Internal",
   portable = TRUE,
   cloneable = FALSE,
   private = list(
@@ -17,13 +17,13 @@ LazyFakeH5Internal <- R6::R6Class(
       file.path(private$file, sub_dir)
     },
     ensure_data_path = function(new_file = FALSE) {
-      if(new_file) {
-        if(file.exists(private$file)) {
+      if (new_file) {
+        if (file.exists(private$file)) {
           unlink(private$file, recursive = TRUE)
         }
       }
 
-      if(!dir.exists(private$file)) {
+      if (!dir.exists(private$file)) {
         dir.create(private$file, showWarnings = FALSE, recursive = FALSE)
       }
 
@@ -31,7 +31,7 @@ LazyFakeH5Internal <- R6::R6Class(
       sub_dir <- gsub("[/]+", "@", sub_dir)
 
       data_path <- file.path(private$file, sub_dir)
-      if(!dir.exists(data_path)) {
+      if (!dir.exists(data_path)) {
         dir.create(data_path, showWarnings = FALSE, recursive = TRUE)
       }
       data_path
@@ -41,12 +41,12 @@ LazyFakeH5Internal <- R6::R6Class(
 
     quiet = FALSE,
 
-    print = function(){
+    print = function() {
       data_path <- private$get_data_path()
       meta_rds <- file.path(data_path, "meta.rds")
       meta <- readRDS(meta_rds)
       dm <- meta$.dim
-      if(!length(dm)) {
+      if (!length(dm)) {
         dm <- meta$.length
       }
       cat(
@@ -60,23 +60,23 @@ LazyFakeH5Internal <- R6::R6Class(
       )
       invisible(self)
     },
-    initialize = function(file_path, data_name, read_only = FALSE, quiet = FALSE){
-      if(!endsWith(tolower(file_path), ".ralt")) {
+    initialize = function(file_path, data_name, read_only = FALSE, quiet = FALSE) {
+      if (!endsWith(tolower(file_path), ".ralt")) {
         file_path <- sprintf("%s.ralt", file_path)
       }
       file_path <- normalizePath(file_path, mustWork = FALSE, winslash = "/")
 
-      if( grepl("[@\\.]", data_name) ) {
+      if ( grepl("[@\\.]", data_name) ) {
         stop("Data name must not contain `@` or `.`")
       }
 
       # First get absolute path, otherwise hdf5r may report file not found error
-      if(read_only){
+      if (read_only) {
         private$file <- file_path
-        if(!dir.exists(file_path)) {
+        if (!dir.exists(file_path)) {
           stop("Path `", file_path, "` must exist and needs to be a folder. It cannot be a file/symlink/empty.")
         }
-      }else{
+      } else {
         file_path <- file_path
         private$file <- file_path
       }
@@ -86,15 +86,15 @@ LazyFakeH5Internal <- R6::R6Class(
       private$read_only <- read_only
     },
 
-    save = function(x, chunk = 'auto', level = 7, replace = TRUE,
+    save = function(x, chunk = "auto", level = 7, replace = TRUE,
                     new_file = FALSE, force = TRUE, ctype = NULL, size = NULL,
-                    ...){
+                    ...) {
       # ctype and size is deprecated but kept in case of compatibility issues
       # ptr$create_dataset =
       # function (name, robj = NULL, dtype = NULL, space = NULL, dims = NULL,
       #           chunk_dims = "auto", gzip_level = 4, link_create_pl = h5const$H5P_DEFAULT,
       #           dataset_create_pl = h5const$H5P_DEFAULT, dataset_access_pl = h5const$H5P_DEFAULT)
-      if(private$read_only && !force){
+      if (private$read_only && !force) {
         stop('File is read-only. Use "force=TRUE"')
       }
 
@@ -111,10 +111,10 @@ LazyFakeH5Internal <- R6::R6Class(
     },
 
 
-    open = function(new_dataset = FALSE, robj, ...){},
+    open = function(new_dataset = FALSE, robj, ...) {},
 
 
-    close = function(all = TRUE){},
+    close = function(all = TRUE) {},
     subset = function(
       ...,
       drop = FALSE, stream = FALSE,
@@ -126,11 +126,11 @@ LazyFakeH5Internal <- R6::R6Class(
       x[..., drop = drop]
     },
 
-    get_dims = function(...){
+    get_dims = function(...) {
       data_path <- private$get_data_path()
       meta_rds <- file.path(data_path, "meta.rds")
       meta <- readRDS(meta_rds)
-      if(length(meta$.dim)) {
+      if (length(meta$.dim)) {
         return(meta$.dim)
       }
       return(meta$.length)
@@ -234,17 +234,19 @@ LazyFakeH5Internal <- R6::R6Class(
   )
 )
 
-load_fakeh5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE){
+load_fakeh5 <- function(file, name, read_only = TRUE, ram = FALSE, quiet = FALSE) {
   re <- LazyFakeH5Internal$new(file_path = file, data_name = name, read_only = read_only, quiet = quiet)
-  if(ram){
+  if (ram) {
     re <- re[]
   }
   return(re)
 }
 
 
-save_fakeh5 <- function(x, file, name, chunk = 'auto', level = 4,replace = TRUE,
-                    new_file = FALSE, ctype = NULL, quiet = FALSE, ...){
+save_fakeh5 <- function(
+    x, file, name, chunk = "auto", level = 4, replace = TRUE,
+    new_file = FALSE, ctype = NULL, quiet = FALSE, ...) {
+
   f <- LazyFakeH5Internal$new(file, name, read_only = FALSE, quiet = quiet)
   f$save(x, chunk = chunk, level = level, replace = replace, new_file = new_file, ctype = ctype, force = TRUE, ...)
   return(invisible(normalizePath(file, mustWork = FALSE)))
@@ -272,37 +274,37 @@ write_fakeh5_slice <- function(x, file, name, start, quiet = FALSE) {
 }
 
 
-fakehh5_names <- function(file){
-  if(!endsWith(tolower(file_path), ".ralt")) {
+fakehh5_names <- function(file) {
+  if (!endsWith(tolower(file_path), ".ralt")) {
     file_path <- sprintf("%s.ralt", file_path)
   }
   file_path <- normalizePath(file_path, mustWork = FALSE, winslash = "/")
-  if(!dir.exists(file_path)) { return(character()) }
+  if (!dir.exists(file_path)) { return(character()) }
 
   nms <- list.dirs(file_path, full.names = FALSE, recursive = FALSE)
   gsub("@", "/", nms)
 }
 
-load_fakeh5_all <- function(file, ram = FALSE){
-  if(!endsWith(tolower(file_path), ".ralt")) {
+load_fakeh5_all <- function(file, ram = FALSE) {
+  if (!endsWith(tolower(file_path), ".ralt")) {
     file_path <- sprintf("%s.ralt", file_path)
   }
   file_path <- normalizePath(file_path, mustWork = FALSE, winslash = "/")
-  if(!dir.exists(file_path)) { return(NULL) }
+  if (!dir.exists(file_path)) { return(NULL) }
   nms <- list.dirs(file_path, full.names = FALSE, recursive = FALSE)
 
   re <- structure(
     new.env(parent = emptyenv()),
     class = c("readNSx_h5_datasets", "readNSx_printable", "environment")
   )
-  lapply(nms, function(nm){
+  lapply(nms, function(nm) {
     y <- load_fakeh5(file, name = gsub("@", "/", nms), ram = ram)
     nm_path <- strsplit(nm, "@")[[1]]
     d <- re
-    for(ii in seq_along(nm_path)){
+    for (ii in seq_along(nm_path)) {
       nm <- nm_path[[ii]]
-      if(ii != length(nm_path)){
-        if(!exists(nm, envir = d)) {
+      if (ii != length(nm_path)) {
+        if (!exists(nm, envir = d)) {
           d[[nm]] <- structure(
             new.env(parent = emptyenv()),
             class = c("readNSx_h5_datasets", "readNSx_printable", "environment")

@@ -11,9 +11,9 @@ format.BCIObjClass <- function(x, ...) {
 
 #' @export
 print.BCIData <- function(x, indent = "", ...) {
-  if(is.character(x$summary)) {
+  if (is.character(x$summary)) {
     summary <- x$summary
-    if(nzchar(indent)) {
+    if (nzchar(indent)) {
       summary <- sprintf("%s%s", indent, strsplit(paste(x$summary, collapse = "\n"), "\n")[[1]])
     }
     cat(summary, sep = "\n")
@@ -26,7 +26,7 @@ parse_bci_param_def <- function(s) {
   sel <- grepl("^[^ ]{1,} [^ ]{1,} [^ ]{1,}= ", s)
   n <- length(s)
   lapply(seq_len(n), function(ii) {
-    if(!sel[[ii]]) { return(NULL) }
+    if (!sel[[ii]]) { return(NULL) }
     params <- parseBCIParamDef(s[[ii]])
     section <- strsplit(params$section, ":", fixed = TRUE)[[1]]
     section <- unname(sapply(section, bciStrDecode, ""))
@@ -89,7 +89,7 @@ read_bci2000_header <- function(file) {
   basic_headers <- structure(as.list(s[2, ]), names = tolower(s[1, ]))
   basic_header_names <- names(basic_headers)
 
-  if(!"bci2000v" %in% basic_header_names) {
+  if (!"bci2000v" %in% basic_header_names) {
     basic_headers$bci2000v <- "1.0"
     basic_headers$dataformat <- "int16"
   }
@@ -110,17 +110,17 @@ read_bci2000_header <- function(file) {
 
 
 
-  if(length(basic_headers$headerlen)) {
+  if (length(basic_headers$headerlen)) {
     headers <- readChar(file, basic_headers$headerlen)
     headers <- strsplit(headers, "(\r\n|\n)")[[1]]
   } else {
     conn <- file(file, "r")
     on.exit({
-      tryCatch({ close(conn) }, error = function(e){})
+      tryCatch({ close(conn) }, error = function(e) {})
     }, add = TRUE)
     headers <- NULL
     line <- "?"
-    while( nchar(trimws(line)) > 0 ) {
+    while ( nchar(trimws(line)) > 0 ) {
       line <- readLines(conn, n = 1)
       headers <- c(headers, line)
     }
@@ -145,11 +145,11 @@ read_bci2000_header <- function(file) {
   param_defs <- param_defs[!vapply(param_defs, is.null, FALSE)]
   parameters <- new.env(parent = emptyenv())
   lapply(param_defs, function(param) {
-    if(is.null(param)) { return() }
+    if (is.null(param)) { return() }
     section <- param$section
 
     li <- parameters
-    for(nm in section) {
+    for (nm in section) {
       nm <- bciStrDecode(nm, nil = "")
       li[[nm]] %?<-% new.env(parent = emptyenv())
       li <- li[[nm]]
@@ -161,7 +161,7 @@ read_bci2000_header <- function(file) {
   as_list <- function(x) {
     nms <- names(x)
     structure(lapply(nms, function(nm) {
-      if(is.environment(x[[nm]])) {
+      if (is.environment(x[[nm]])) {
         return(as_list(x[[nm]]))
       } else {
         return(x[[nm]])
@@ -196,7 +196,7 @@ read_bci2000 <- function(file) {
 
   # In case any error happens, always close the connection
   on.exit({
-    if( conn_open ) {
+    if ( conn_open ) {
       # trycatch might not be needed here but ..
       tryCatch({ close(conn) }, error = function(e) { })
     }
