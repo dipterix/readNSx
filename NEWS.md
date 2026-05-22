@@ -1,6 +1,8 @@
 # readNSx 0.0.7
 
 * `import_nsp` Supports streaming the data with lengths larger than the bound of 32-bit integers. This supports high-frequency long-time continuous recording, extending the `30,000 Hz` recording duration from 10 minutes (100 channels) to Almost a half day recording. The individual channel size is still limited by the 32-bit integer, that is around 19 hours
+* Fixed an `rchk` issue reported by `CRAN`
+* Replaced `c.integer64` with `c`
 
 # readNSx 0.0.6
 
