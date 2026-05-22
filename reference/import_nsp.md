@@ -60,6 +60,7 @@ for what's contained.
 ## Examples
 
 ``` r
+
 # Please get your own sample data first. This package does not
 # provide sample data for privacy and license concerns :)
 

@@ -23,6 +23,7 @@ Parsed signal data
 ## Examples
 
 ``` r
+
 # Package comes with sample data
 file <- system.file("samples", "bci2000_sample.dat", package = "readNSx")
 result <- read_bci2000(file)

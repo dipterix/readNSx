@@ -11,12 +11,14 @@ study intracranial Electroencephalography and use systems like
 To install `readNSx` from `CRAN`,
 
 ``` r
+
 install.packages("readNSx")
 ```
 
 To install development version
 
 ``` r
+
 install.packages("readNSx", repos = c(
   dipterix = "https://dipterix.r-universe.dev",
   CRAN = "https://cloud.r-project.org"))
@@ -32,6 +34,7 @@ If you have never converted data, use the following one-time function
 call to import `.nev` and `.nsx` data:
 
 ``` r
+
 readNSx::import_nsp(
   path = "YAB_Datafile_001.nev", 
   prefix = "YAB_Converted_001", 
@@ -63,6 +66,7 @@ script (sent from `psychtoolbox` or related software that you use when
 collecting data).
 
 ``` r
+
 # prefix <- "YAB_Converted_001"
 nev <- readNSx::get_nev(prefix)
 
@@ -83,6 +87,7 @@ readNSx::get_event(nev, "comment")
 #### Example 2: get channel information and data
 
 ``` r
+
 # prefix <- "YAB_Converted_001"
 
 # Gather information of channel 10

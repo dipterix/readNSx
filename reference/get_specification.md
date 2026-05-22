@@ -81,6 +81,7 @@ get the channel data.
 ## Examples
 
 ``` r
+
 get_specification(version = c(2,3), type = "nev")
 #> <Blackrock [nev] specification version [2.3]>
 #> Section 1: Header Basic Information.

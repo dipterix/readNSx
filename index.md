@@ -9,6 +9,7 @@ well-supported by R, Python, Matlab.
 The package is on `CRAN` soon. Install it via
 
 ``` r
+
 install.packages("readNSx")
 ```
 
@@ -16,6 +17,7 @@ You can install the nightly development version of `readNSx` from
 [r-universe](https://dipterix.r-universe.dev/readNSx)
 
 ``` r
+
 # Enable repository from dipterix
 options(repos = c(
   dipterix = 'https://dipterix.r-universe.dev',
@@ -37,6 +39,7 @@ To import the data into `RAVE (R Analysis and Visualization of iEEG)`,
 use the following code as an example.
 
 ``` r
+
 readNSx::import_nsp(
   path = "~/EMU_RAW/EMU-008_sub-YAB_task-congruency_run-01_NSP-1.nev", 
   prefix = "~/rave_data/raw/YAB/block008", 
@@ -61,6 +64,7 @@ several critical information and require manually edits. However, you
 may use `import_nsp` to import into `BIDS`-like format.
 
 ``` r
+
 readNSx::import_nsp(
   path = "~/EMU_RAW/EMU-008_sub-YAB_task-congruency_run-01_NSP-1.nev", 
   prefix = file.path(
