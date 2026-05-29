@@ -2,6 +2,8 @@
 
 ## readNSx 0.0.7
 
+CRAN release: 2026-05-23
+
 - `import_nsp` Supports streaming the data with lengths larger than the
   bound of 32-bit integers. This supports high-frequency long-time
   continuous recording, extending the `30,000 Hz` recording duration
