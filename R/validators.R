@@ -16,7 +16,7 @@ validate_spec <- function(name, type, size, n = 1, names = NULL, ...) {
     n <- 1L
   } else {
     n <- as.integer(n)
-    if (length(n) > 1 || any(is.na(n))) {
+    if (length(n) > 1 || anyNA(n)) {
       stop("Element length `n` must be an integer")
     }
   }

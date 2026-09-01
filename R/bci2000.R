@@ -14,7 +14,11 @@ print.BCIData <- function(x, indent = "", ...) {
   if (is.character(x$summary)) {
     summary <- x$summary
     if (nzchar(indent)) {
-      summary <- sprintf("%s%s", indent, strsplit(paste(x$summary, collapse = "\n"), "\n")[[1]])
+      summary <- sprintf(
+        "%s%s",
+        indent,
+        strsplit(paste(x$summary, collapse = "\n"), "\n", fixed = TRUE)[[1]]
+      )
     }
     cat(summary, sep = "\n")
     return(invisible(x))
@@ -134,7 +138,7 @@ read_bci2000_header <- function(file) {
 
   # Name Length Value ByteLocation BitLocation CRLF
   state_defs <- headers[ seq(idx1 + 1, idx2 - 1L) ]
-  state_defs <- unlist(lapply(strsplit(state_defs, " "), function(x) {
+  state_defs <- unlist(lapply(strsplit(state_defs, " ", fixed = TRUE), function(x) {
     n <- paste(x[seq_len(length(x) - 4)], collapse = " ")
     v <- as.integer(x[ -seq_len(length(x) - 4) ])
     structure(list(v), names = n)

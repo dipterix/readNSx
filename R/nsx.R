@@ -8,7 +8,7 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
     stop("read_nsx: path must ends with .ns1 to .ns9")
   }
 
-  partition_prefix <- gsub("[.]", "_", partition_prefix)
+  partition_prefix <- gsub(".", "_", partition_prefix, fixed = TRUE)
   partition_prefix <- gsub("[\\/]{1,}$", "", partition_prefix)
 
   path <- normalizePath(path, winslash = "/", mustWork = TRUE)

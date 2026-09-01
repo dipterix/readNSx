@@ -181,16 +181,16 @@ LazyH5Internal <- R6::R6Class(
       })
 
       # step 2: get allocation size
-      alloc_dim <- sapply(seq_along(dims), function(ii) {
+      alloc_dim <- vapply(seq_along(dims), function(ii) {
         if (is.logical(args[[ii]])) {
-          return(sum(args[[ii]]))
+          return(as.integer(sum(args[[ii]])))
         } else if (is.numeric(args[[ii]])) {
-          return(length(args[[ii]]))
+          return(as.integer(length(args[[ii]])))
         } else {
           # must be blank "", otherwise raise error
-          return(dims[ii])
+          return(as.integer(dims[ii]))
         }
-      })
+      }, integer(1L))
 
       # step 3: get legit indices
       legit_args <- lapply(seq_along(dims), function(ii) {
@@ -566,7 +566,7 @@ load_h5_all <- function(file, ram = FALSE) {
     )
     lapply(dset_names, function(nm) {
       y <- load_h5(file, name = nm, ram = ram)
-      nm_path <- strsplit(nm, "/")[[1]]
+      nm_path <- strsplit(nm, "/", fixed = TRUE)[[1]]
       d <- re
       for (ii in seq_along(nm_path)) {
         nm <- nm_path[[ii]]

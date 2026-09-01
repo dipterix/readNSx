@@ -110,7 +110,7 @@ get_file_type <- function( path ) {
 get_specification <- function(version, type = c("nev", "nsx")) {
   type <- match.arg(type)
   version <- as.character(version)
-  if (!length(version) || any(is.na(version))) {
+  if (!length(version) || anyNA(version)) {
     stop("readNSx: blackrock_specification version must be valid.")
   }
   if (length(version) >= 2) {
