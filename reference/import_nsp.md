@@ -57,6 +57,17 @@ A list of configurations, see
 [`get_specification`](http://dipterix.org/readNSx/reference/get_specification.md)
 for what's contained.
 
+## Storage format
+
+Channel signals are written as `HDF5` datasets. readNSx reads and writes
+them with its own reader and writer, linked against hdf5lib, which ships
+a static build of the `HDF5` library; no system `HDF5` installation is
+required on any platform.
+
+The layout on disk is the conventional one, so exported files can also
+be read with hdf5r, `'h5py'`, or the `HDF5` command-line tools, and
+files exported by earlier versions of readNSx are read back unchanged.
+
 ## Examples
 
 ``` r

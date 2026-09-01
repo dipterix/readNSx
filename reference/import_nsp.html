@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Import signal data from 'Blackrock-Microsystems' data files</h1>
-      <small class="dont-index">Source: <a href="https://github.com/dipterix/readNSx/blob/v0.0.7/R/blackrock.R" class="external-link"><code>R/blackrock.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/dipterix/readNSx/blob/main/R/blackrock.R" class="external-link"><code>R/blackrock.R</code></a></small>
       <div class="d-none name"><code>import_nsp.Rd</code></div>
     </div>
 
@@ -99,6 +99,20 @@ method; examples are <code>Progress</code> in the <code>shiny</code> package,
     <p>A list of configurations, see <code><a href="get_specification.html">get_specification</a></code> for
 what's contained.</p>
     </div>
+    <div class="section level2">
+    <h2 id="storage-format">Storage format<a class="anchor" aria-label="anchor" href="#storage-format"></a></h2>
+
+
+
+<p>Channel signals are written as <code>HDF5</code> datasets. <span class="pkg">readNSx</span> reads and
+writes them with its own reader and writer, linked against <span class="pkg">hdf5lib</span>,
+which ships a static build of the <code>HDF5</code> library; no system <code>HDF5</code>
+installation is required on any platform.</p>
+<p>The layout on disk is the conventional one, so exported files can also be
+read with <span class="pkg">hdf5r</span>, <code>'h5py'</code>, or the <code>HDF5</code> command-line tools,
+and files exported by earlier versions of <span class="pkg">readNSx</span> are read back
+unchanged.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -148,7 +162,7 @@ what's contained.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

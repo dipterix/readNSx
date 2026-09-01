@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,9 +33,26 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/dipterix/readNSx/blob/v0.0.7/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/dipterix/readNSx/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.7.9000" id="readnsx-0079000">readNSx 0.0.7.9000<a class="anchor" aria-label="anchor" href="#readnsx-0079000"></a></h2>
+<ul><li>
+<code>HDF5</code> is now read and written directly by <code>readNSx</code>, linking against <code>hdf5lib</code> for a static build of the <code>HDF5</code> library. This removes the dependency on <code>hdf5r</code> and the <code>HDF5</code> system requirement; no system <code>HDF5</code> installation is needed on any platform</li>
+<li>Removed the <code>hdf5r</code> code path and the plain-<code>R</code> <code>.ralt</code> fallback store; there is now a single storage implementation. The layout on disk is unchanged, so files exported by earlier versions read back unchanged and files written now stay readable by <code>hdf5r</code>, <code>h5py</code>, and command-line <code>HDF5</code> tools</li>
+<li>Channel datasets are no longer capped at <code>2^31</code> samples: dimensions and offsets are carried as doubles all the way into <code>HDF5</code>
+</li>
+<li>Reading a contiguous range from a channel now reads only that range instead of the whole dataset</li>
+<li>
+<code>h5_valid(file, "w")</code> no longer truncates the file it is asked about</li>
+<li>Added complex support, stored as the <code>H5T_COMPOUND {"r", "i"}</code> of doubles that <code>numpy</code> and <code>h5py</code> use for <code>complex128</code>. Complex datasets written elsewhere are read back as complex whatever their member names, including the <code>{"Real", "Imaginary"}</code> layout <code>hdf5r</code> uses and <code>HDF5</code> 2.0 native complex</li>
+<li>Strings are now written as <code>UTF-8</code> rather than being labeled <code>ASCII</code> regardless of content, so non-<code>ASCII</code> text survives. For plain <code>ASCII</code> the stored bytes are unchanged. Strings are read using whatever character set the file declares, so files written by earlier versions are unaffected</li>
+<li>
+<code>NA_character_</code> is now stored as an <code>HDF5</code> <code>NULL</code> and read back as <code>NA</code>. Previously it became the literal text <code>"NA"</code>, which no reader could tell apart from a genuine <code>"NA"</code> string</li>
+<li>
+<code>NA</code> in integer, double and logical vectors round-trips exactly, matching what <code>hdf5r</code> stores bit for bit</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.7" id="readnsx-007">readNSx 0.0.7<a class="anchor" aria-label="anchor" href="#readnsx-007"></a></h2><p class="text-muted">CRAN release: 2026-05-23</p>
 <ul><li>
@@ -82,7 +99,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
