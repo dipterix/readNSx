@@ -11,3 +11,4 @@
 ^\.positai$
 ^\.claude$
 ^\.lintr$
+^revdep$
