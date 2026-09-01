@@ -1,7 +1,6 @@
 # Tests for allocate_h5 and write_h5_slice functions
 
 test_that("Three write strategies produce identical results", {
-  skip_if_not(system.file(package = "hdf5r") != "", message = "hdf5r not installed")
 
  
   # Setup: create test data with random slice order
@@ -80,7 +79,6 @@ test_that("Three write strategies produce identical results", {
 
 
 test_that("Three write strategies produce identical results (2D case)", {
-  skip_if_not(system.file(package = "hdf5r") != "", message = "hdf5r not installed")
 
   # Setup: 2D array with column-wise slices in random order
   set.seed(123)
@@ -155,8 +153,7 @@ test_that("Three write strategies produce identical results (2D case)", {
 })
 
 
-test_that("allocate_h5 and write_h5_slice work with hdf5r", {
-  skip_if_not(system.file(package = "hdf5r") != "", message = "hdf5r not installed")
+test_that("allocate_h5 and write_h5_slice work", {
 
 
   # Create temp file
@@ -177,6 +174,7 @@ test_that("allocate_h5 and write_h5_slice work with hdf5r", {
 
   # Verify allocation
   expect_true(file.exists(tmp_file))
+
   loaded <- load_h5(tmp_file, "test_1d", ram = TRUE)
   expect_equal(length(loaded), 100L)
   # HDF5 allocates with zeros (or uninitialized), not NA
@@ -238,7 +236,6 @@ test_that("allocate_h5 and write_h5_slice work with hdf5r", {
 
 
 test_that("allocate_h5 and write_h5_slice handle errors correctly", {
-  skip_if_not(system.file(package = "hdf5r") != "", message = "hdf5r not installed")
 
   tmp_file <- tempfile(fileext = ".h5")
   on.exit(unlink(tmp_file, force = TRUE), add = TRUE)
@@ -270,84 +267,6 @@ test_that("allocate_h5 and write_h5_slice handle errors correctly", {
   # Error: dimension mismatch
   expect_error(
     write_h5_slice(x = matrix(1:10, 2, 5), file = tmp_file, name = "test", start = 1L),
-    regexp = "dimensions"
-  )
-})
-
-
-test_that("allocate_fakeh5 and write_fakeh5_slice work without hdf5r", {
-  # Test the RDS-based fallback implementation directly
-
-  tmp_file <- tempfile()
-  on.exit(unlink(sprintf("%s.ralt", tmp_file), recursive = TRUE, force = TRUE), add = TRUE)
-
-  # Test 1D allocation
-  allocate_fakeh5(
-    file = tmp_file,
-    name = "test_1d",
-    dims = 100L,
-    ctype = "numeric",
-    new_file = TRUE
-  )
-
-  # Verify allocation
-  expect_true(dir.exists(sprintf("%s.ralt", tmp_file)))
-  loaded <- load_fakeh5(tmp_file, "test_1d", ram = TRUE)
-  expect_equal(length(loaded), 100L)
-  expect_true(all(is.na(loaded)))
-
-  # Write chunks
-  write_fakeh5_slice(x = 1:50, file = tmp_file, name = "test_1d", start = 1L)
-  write_fakeh5_slice(x = 51:100, file = tmp_file, name = "test_1d", start = 51L)
-
-  # Verify
-  loaded <- load_fakeh5(tmp_file, "test_1d", ram = TRUE)
-  expect_equal(as.vector(loaded), 1:100)
-
-  # Test 2D allocation
-  allocate_fakeh5(
-    file = tmp_file,
-    name = "test_2d",
-    dims = c(10L, 20L),
-    ctype = "integer"
-  )
-
-  # Write 2D slices
-  slice1 <- matrix(1L:50L, nrow = 10, ncol = 5)
-  write_fakeh5_slice(x = slice1, file = tmp_file, name = "test_2d", start = c(1L, 1L))
-
-  slice2 <- matrix(51L:100L, nrow = 10, ncol = 5)
-  write_fakeh5_slice(x = slice2, file = tmp_file, name = "test_2d", start = c(1L, 6L))
-
-  # Verify
-  loaded <- load_fakeh5(tmp_file, "test_2d", ram = TRUE)
-  expect_equal(loaded[, 1:5], slice1)
-  expect_equal(loaded[, 6:10], slice2)
-})
-
-
-test_that("write_fakeh5_slice handles errors correctly", {
-  tmp_file <- tempfile()
-  on.exit(unlink(sprintf("%s.ralt", tmp_file), recursive = TRUE, force = TRUE), add = TRUE)
-
-  # Error: write to non-existent dataset
-  expect_error(
-    write_fakeh5_slice(x = 1:10, file = tmp_file, name = "nonexistent", start = 1L),
-    regexp = "allocate_h5|does not exist"
-  )
-
-  # Allocate first
-  allocate_fakeh5(file = tmp_file, name = "test", dims = 100L, new_file = TRUE)
-
-  # Error: write out of bounds
-  expect_error(
-    write_fakeh5_slice(x = 1:50, file = tmp_file, name = "test", start = 60L),
-    regexp = "out of bounds"
-  )
-
-  # Error: dimension mismatch
-  expect_error(
-    write_fakeh5_slice(x = matrix(1:10, 2, 5), file = tmp_file, name = "test", start = 1L),
     regexp = "dimensions"
   )
 })

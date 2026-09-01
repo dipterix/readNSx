@@ -1,0 +1,8 @@
+# `hdf5lib` ships a static build of the HDF5 C library and is declared in
+# LinkingTo, so no system HDF5 installation is needed on any platform.
+#
+# The API version is pinned so that future HDF5 releases cannot change the
+# semantics readNSx compiles against.
+
+PKG_CPPFLAGS = `$(R_HOME)/bin/Rscript -e "cat(hdf5lib::c_flags(api = 2.0))"`
+PKG_LIBS = `$(R_HOME)/bin/Rscript -e "cat(hdf5lib::ld_flags(api = 2.0))"`

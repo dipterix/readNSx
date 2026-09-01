@@ -25,6 +25,17 @@
 #' @return A list of configurations, see \code{\link{get_specification}} for
 #' what's contained.
 #'
+#' @section Storage format:
+#'
+#' Channel signals are written as \verb{HDF5} datasets. \pkg{readNSx} reads and
+#' writes them with its own reader and writer, linked against \pkg{hdf5lib},
+#' which ships a static build of the \verb{HDF5} library; no system \verb{HDF5}
+#' installation is required on any platform.
+#'
+#' The layout on disk is the conventional one, so exported files can also be
+#' read with \pkg{hdf5r}, \code{'h5py'}, or the \verb{HDF5} command-line tools,
+#' and files exported by earlier versions of \pkg{readNSx} are read back
+#' unchanged.
 #'
 #' @examples
 #'

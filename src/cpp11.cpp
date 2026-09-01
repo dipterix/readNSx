@@ -5,6 +5,76 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
+// h5native.cpp
+bool h5_native_is_h5(std::string path);
+extern "C" SEXP _readNSx_h5_native_is_h5(SEXP path) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_is_h5(cpp11::as_cpp<cpp11::decay_t<std::string>>(path)));
+  END_CPP11
+}
+// h5native.cpp
+cpp11::writable::strings h5_native_list_datasets(std::string path);
+extern "C" SEXP _readNSx_h5_native_list_datasets(SEXP path) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_list_datasets(cpp11::as_cpp<cpp11::decay_t<std::string>>(path)));
+  END_CPP11
+}
+// h5native.cpp
+bool h5_native_exists(std::string path, std::string name);
+extern "C" SEXP _readNSx_h5_native_exists(SEXP path, SEXP name) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_exists(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name)));
+  END_CPP11
+}
+// h5native.cpp
+cpp11::writable::doubles h5_native_dims(std::string path, std::string name);
+extern "C" SEXP _readNSx_h5_native_dims(SEXP path, SEXP name) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_dims(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name)));
+  END_CPP11
+}
+// h5native.cpp
+SEXP h5_native_read(std::string path, std::string name);
+extern "C" SEXP _readNSx_h5_native_read(SEXP path, SEXP name) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_read(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name)));
+  END_CPP11
+}
+// h5native.cpp
+SEXP h5_native_read_slab(std::string path, std::string name, cpp11::doubles start, cpp11::doubles count);
+extern "C" SEXP _readNSx_h5_native_read_slab(SEXP path, SEXP name, SEXP start, SEXP count) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_read_slab(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(start), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(count)));
+  END_CPP11
+}
+// h5native.cpp
+std::string h5_native_write(std::string path, std::string name, SEXP x, cpp11::doubles chunk, int level, bool replace);
+extern "C" SEXP _readNSx_h5_native_write(SEXP path, SEXP name, SEXP x, SEXP chunk, SEXP level, SEXP replace) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_write(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name), cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(chunk), cpp11::as_cpp<cpp11::decay_t<int>>(level), cpp11::as_cpp<cpp11::decay_t<bool>>(replace)));
+  END_CPP11
+}
+// h5native.cpp
+std::string h5_native_allocate(std::string path, std::string name, cpp11::doubles dims, std::string ctype, cpp11::doubles chunk, int level, bool replace);
+extern "C" SEXP _readNSx_h5_native_allocate(SEXP path, SEXP name, SEXP dims, SEXP ctype, SEXP chunk, SEXP level, SEXP replace) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_allocate(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(dims), cpp11::as_cpp<cpp11::decay_t<std::string>>(ctype), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(chunk), cpp11::as_cpp<cpp11::decay_t<int>>(level), cpp11::as_cpp<cpp11::decay_t<bool>>(replace)));
+  END_CPP11
+}
+// h5native.cpp
+std::string h5_native_write_slab(std::string path, std::string name, SEXP x, cpp11::doubles start);
+extern "C" SEXP _readNSx_h5_native_write_slab(SEXP path, SEXP name, SEXP x, SEXP start) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_write_slab(cpp11::as_cpp<cpp11::decay_t<std::string>>(path), cpp11::as_cpp<cpp11::decay_t<std::string>>(name), cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(start)));
+  END_CPP11
+}
+// h5native.cpp
+bool h5_native_writable(std::string path);
+extern "C" SEXP _readNSx_h5_native_writable(SEXP path) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(h5_native_writable(cpp11::as_cpp<cpp11::decay_t<std::string>>(path)));
+  END_CPP11
+}
 // rawToSEXP.cpp
 SEXP rawToUInt8(SEXP x);
 extern "C" SEXP _readNSx_rawToUInt8(SEXP x) {
@@ -157,27 +227,37 @@ extern "C" SEXP _readNSx_readNSxDataPacket2x(SEXP filePath, SEXP nBytes, SEXP sa
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_readNSx_bciStrDecode",        (DL_FUNC) &_readNSx_bciStrDecode,        2},
-    {"_readNSx_createBCIObject",     (DL_FUNC) &_readNSx_createBCIObject,     2},
-    {"_readNSx_formatBCIObject",     (DL_FUNC) &_readNSx_formatBCIObject,     1},
-    {"_readNSx_maturalizeBCIObject", (DL_FUNC) &_readNSx_maturalizeBCIObject, 1},
-    {"_readNSx_parseBCIDataRaw",     (DL_FUNC) &_readNSx_parseBCIDataRaw,     3},
-    {"_readNSx_parseBCIParamDef",    (DL_FUNC) &_readNSx_parseBCIParamDef,    1},
-    {"_readNSx_printBCIObject",      (DL_FUNC) &_readNSx_printBCIObject,      1},
-    {"_readNSx_rawToFloat",          (DL_FUNC) &_readNSx_rawToFloat,          1},
-    {"_readNSx_rawToInt16",          (DL_FUNC) &_readNSx_rawToInt16,          1},
-    {"_readNSx_rawToInt32",          (DL_FUNC) &_readNSx_rawToInt32,          1},
-    {"_readNSx_rawToInt64",          (DL_FUNC) &_readNSx_rawToInt64,          1},
-    {"_readNSx_rawToInt8",           (DL_FUNC) &_readNSx_rawToInt8,           1},
-    {"_readNSx_rawToString",         (DL_FUNC) &_readNSx_rawToString,         1},
-    {"_readNSx_rawToUInt16",         (DL_FUNC) &_readNSx_rawToUInt16,         1},
-    {"_readNSx_rawToUInt32",         (DL_FUNC) &_readNSx_rawToUInt32,         1},
-    {"_readNSx_rawToUInt8",          (DL_FUNC) &_readNSx_rawToUInt8,          1},
-    {"_readNSx_readNSxDataPacket2x", (DL_FUNC) &_readNSx_readNSxDataPacket2x, 7},
-    {"_readNSx_readNSxDataPacket30", (DL_FUNC) &_readNSx_readNSxDataPacket30, 7},
-    {"_readNSx_readNSxPacketData",   (DL_FUNC) &_readNSx_readNSxPacketData,   8},
-    {"_readNSx_scanNSxPackets2x",    (DL_FUNC) &_readNSx_scanNSxPackets2x,    4},
-    {"_readNSx_scanNSxPackets30",    (DL_FUNC) &_readNSx_scanNSxPackets30,    4},
+    {"_readNSx_bciStrDecode",            (DL_FUNC) &_readNSx_bciStrDecode,            2},
+    {"_readNSx_createBCIObject",         (DL_FUNC) &_readNSx_createBCIObject,         2},
+    {"_readNSx_formatBCIObject",         (DL_FUNC) &_readNSx_formatBCIObject,         1},
+    {"_readNSx_h5_native_allocate",      (DL_FUNC) &_readNSx_h5_native_allocate,      7},
+    {"_readNSx_h5_native_dims",          (DL_FUNC) &_readNSx_h5_native_dims,          2},
+    {"_readNSx_h5_native_exists",        (DL_FUNC) &_readNSx_h5_native_exists,        2},
+    {"_readNSx_h5_native_is_h5",         (DL_FUNC) &_readNSx_h5_native_is_h5,         1},
+    {"_readNSx_h5_native_list_datasets", (DL_FUNC) &_readNSx_h5_native_list_datasets, 1},
+    {"_readNSx_h5_native_read",          (DL_FUNC) &_readNSx_h5_native_read,          2},
+    {"_readNSx_h5_native_read_slab",     (DL_FUNC) &_readNSx_h5_native_read_slab,     4},
+    {"_readNSx_h5_native_writable",      (DL_FUNC) &_readNSx_h5_native_writable,      1},
+    {"_readNSx_h5_native_write",         (DL_FUNC) &_readNSx_h5_native_write,         6},
+    {"_readNSx_h5_native_write_slab",    (DL_FUNC) &_readNSx_h5_native_write_slab,    4},
+    {"_readNSx_maturalizeBCIObject",     (DL_FUNC) &_readNSx_maturalizeBCIObject,     1},
+    {"_readNSx_parseBCIDataRaw",         (DL_FUNC) &_readNSx_parseBCIDataRaw,         3},
+    {"_readNSx_parseBCIParamDef",        (DL_FUNC) &_readNSx_parseBCIParamDef,        1},
+    {"_readNSx_printBCIObject",          (DL_FUNC) &_readNSx_printBCIObject,          1},
+    {"_readNSx_rawToFloat",              (DL_FUNC) &_readNSx_rawToFloat,              1},
+    {"_readNSx_rawToInt16",              (DL_FUNC) &_readNSx_rawToInt16,              1},
+    {"_readNSx_rawToInt32",              (DL_FUNC) &_readNSx_rawToInt32,              1},
+    {"_readNSx_rawToInt64",              (DL_FUNC) &_readNSx_rawToInt64,              1},
+    {"_readNSx_rawToInt8",               (DL_FUNC) &_readNSx_rawToInt8,               1},
+    {"_readNSx_rawToString",             (DL_FUNC) &_readNSx_rawToString,             1},
+    {"_readNSx_rawToUInt16",             (DL_FUNC) &_readNSx_rawToUInt16,             1},
+    {"_readNSx_rawToUInt32",             (DL_FUNC) &_readNSx_rawToUInt32,             1},
+    {"_readNSx_rawToUInt8",              (DL_FUNC) &_readNSx_rawToUInt8,              1},
+    {"_readNSx_readNSxDataPacket2x",     (DL_FUNC) &_readNSx_readNSxDataPacket2x,     7},
+    {"_readNSx_readNSxDataPacket30",     (DL_FUNC) &_readNSx_readNSxDataPacket30,     7},
+    {"_readNSx_readNSxPacketData",       (DL_FUNC) &_readNSx_readNSxPacketData,       8},
+    {"_readNSx_scanNSxPackets2x",        (DL_FUNC) &_readNSx_scanNSxPackets2x,        4},
+    {"_readNSx_scanNSxPackets30",        (DL_FUNC) &_readNSx_scanNSxPackets30,        4},
     {NULL, NULL, 0}
 };
 }
