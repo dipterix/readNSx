@@ -37,7 +37,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.7.9000" id="readnsx-0079000">readNSx 0.0.7.9000<a class="anchor" aria-label="anchor" href="#readnsx-0079000"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="readnsx-010">readNSx 0.1.0<a class="anchor" aria-label="anchor" href="#readnsx-010"></a></h2>
 <ul><li>
 <code>HDF5</code> is now read and written directly by <code>readNSx</code>, linking against <code>hdf5lib</code> for a static build of the <code>HDF5</code> library. This removes the dependency on <code>hdf5r</code> and the <code>HDF5</code> system requirement; no system <code>HDF5</code> installation is needed on any platform</li>
 <li>Removed the <code>hdf5r</code> code path and the plain-<code>R</code> <code>.ralt</code> fallback store; there is now a single storage implementation. The layout on disk is unchanged, so files exported by earlier versions read back unchanged and files written now stay readable by <code>hdf5r</code>, <code>h5py</code>, and command-line <code>HDF5</code> tools</li>

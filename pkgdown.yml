@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   read-nev-nsx-data: read-nev-nsx-data.html
-last_built: 2026-09-01T02:51Z
+last_built: 2026-09-01T17:38Z
 urls:
   reference: http://dipterix.org/readNSx/reference
   article: http://dipterix.org/readNSx/articles

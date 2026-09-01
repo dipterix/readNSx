@@ -1,6 +1,6 @@
 # Changelog
 
-## readNSx 0.0.7.9000
+## readNSx 0.1.0
 
 - `HDF5` is now read and written directly by `readNSx`, linking against
   `hdf5lib` for a static build of the `HDF5` library. This removes the
