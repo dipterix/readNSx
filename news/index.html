@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,11 +33,20 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/dipterix/readNSx/blob/v0.1.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/dipterix/readNSx/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="readnsx-010">readNSx 0.1.0<a class="anchor" aria-label="anchor" href="#readnsx-010"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="readnsx-011">readNSx 0.1.1<a class="anchor" aria-label="anchor" href="#readnsx-011"></a></h2>
+<ul><li>
+<code>NEV</code> data packets are now read in chunks, and the packet types of a whole chunk are checked at once. Excluded events (by default <code>spike</code>) no longer cost any parsing, and memory use no longer grows with the file size, so importing a <code>NEV</code> file that stores the waveform of every spike is many times faster</li>
+<li>The waveform of each spike is parsed for a whole chunk at once and written to <code>waveforms.h5</code> while reading</li>
+<li>Fixed the spike waveform being cut to its first 4 (<code>NEV</code> 2.2 and 2.3) or 6 (<code>NEV</code> 3.0) samples. The <code>waveform</code> data set in <code>waveforms.h5</code> is now a matrix with all samples of each spike, one column per spike (zero-padded when electrodes store samples in different sizes); it used to be a vector</li>
+<li>Fixed an error when importing spikes from a recording that has no spikes</li>
+<li>Added <code><a href="../reference/read_nev_header.html">read_nev_header()</a></code> to read the <code>NEV</code> headers, such as the channel labels, without reading the data packets</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="readnsx-010">readNSx 0.1.0<a class="anchor" aria-label="anchor" href="#readnsx-010"></a></h2><p class="text-muted">CRAN release: 2026-09-02</p>
 <ul><li>
 <code>HDF5</code> is now read and written directly by <code>readNSx</code>, linking against <code>hdf5lib</code> for a static build of the <code>HDF5</code> library. This removes the dependency on <code>hdf5r</code> and the <code>HDF5</code> system requirement; no system <code>HDF5</code> installation is needed on any platform</li>
 <li>Removed the <code>hdf5r</code> code path and the plain-<code>R</code> <code>.ralt</code> fallback store; there is now a single storage implementation. The layout on disk is unchanged, so files exported by earlier versions read back unchanged and files written now stay readable by <code>hdf5r</code>, <code>h5py</code>, and command-line <code>HDF5</code> tools</li>

@@ -1,6 +1,29 @@
 # Changelog
 
+## readNSx 0.1.1
+
+- `NEV` data packets are now read in chunks, and the packet types of a
+  whole chunk are checked at once. Excluded events (by default `spike`)
+  no longer cost any parsing, and memory use no longer grows with the
+  file size, so importing a `NEV` file that stores the waveform of every
+  spike is many times faster
+- The waveform of each spike is parsed for a whole chunk at once and
+  written to `waveforms.h5` while reading
+- Fixed the spike waveform being cut to its first 4 (`NEV` 2.2 and 2.3)
+  or 6 (`NEV` 3.0) samples. The `waveform` data set in `waveforms.h5` is
+  now a matrix with all samples of each spike, one column per spike
+  (zero-padded when electrodes store samples in different sizes); it
+  used to be a vector
+- Fixed an error when importing spikes from a recording that has no
+  spikes
+- Added
+  [`read_nev_header()`](http://dipterix.org/readNSx/reference/read_nev_header.md)
+  to read the `NEV` headers, such as the channel labels, without reading
+  the data packets
+
 ## readNSx 0.1.0
+
+CRAN release: 2026-09-02
 
 - `HDF5` is now read and written directly by `readNSx`, linking against
   `hdf5lib` for a static build of the `HDF5` library. This removes the

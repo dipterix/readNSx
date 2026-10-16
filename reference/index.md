@@ -31,3 +31,6 @@
   :
 
   Read `'BCI2000'` recording data
+
+- [`read_nev_header()`](http://dipterix.org/readNSx/reference/read_nev_header.md)
+  : Read 'NEV' headers
