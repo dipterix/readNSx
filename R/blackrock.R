@@ -415,7 +415,10 @@ get_nev.readNSx_collection <- function(x, ...) {
 #' }
 #' @param ... pass to other methods
 #' @return A data frame of corresponding event type, or \code{NULL} if event
-#' is not found or invalid
+#' is not found or invalid. For \code{'spike'}, the data sets of
+#' \code{waveforms.h5}: \code{channelID}, \code{timeInSeconds},
+#' \code{classification}, and \code{waveform}, a matrix with the waveform of
+#' each spike in micro-volts, one column per spike
 #' @export
 get_event <- function(x, event_type, ...) {
   event_type <- tolower(event_type)
