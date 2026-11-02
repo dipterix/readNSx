@@ -104,16 +104,12 @@ parseBCIParamDef <- function(statement) {
   .Call(`_readNSx_parseBCIParamDef`, statement)
 }
 
-scanNSxPackets30 <- function(filePath, nBytes, nChannels, skipBytes) {
-  .Call(`_readNSx_scanNSxPackets30`, filePath, nBytes, nChannels, skipBytes)
+scanNSxPartitions <- function(filePath, skipBytes, nBytes, nChannels, timestampBytes, timestampResolution, sampleRate, packetsPerFrame, maxTickMultiple) {
+  .Call(`_readNSx_scanNSxPartitions`, filePath, skipBytes, nBytes, nChannels, timestampBytes, timestampResolution, sampleRate, packetsPerFrame, maxTickMultiple)
 }
 
-scanNSxPackets2x <- function(filePath, nBytes, nChannels, skipBytes) {
-  .Call(`_readNSx_scanNSxPackets2x`, filePath, nBytes, nChannels, skipBytes)
-}
-
-readNSxPacketData <- function(filePath, byteOffset, nDataPoints, nChannels, slope, intercept, sampleOffset, sampleCount) {
-  .Call(`_readNSx_readNSxPacketData`, filePath, byteOffset, nDataPoints, nChannels, slope, intercept, sampleOffset, sampleCount)
+readNSxPoints <- function(filePath, byteOffset, stride, nChannels, slope, intercept, firstPoint, nPoints) {
+  .Call(`_readNSx_readNSxPoints`, filePath, byteOffset, stride, nChannels, slope, intercept, firstPoint, nPoints)
 }
 
 readNSxDataPacket30 <- function(filePath, nBytes, sampleRate, nChannels, skipBytes, slope, intercept) {

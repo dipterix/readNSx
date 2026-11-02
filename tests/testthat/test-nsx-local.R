@@ -49,7 +49,7 @@ test_that("read_nsx works with local NSx file", {
   expect_true(length(result) > 0)
 })
 
-test_that("scanNSxPackets returns correctly named list",
+test_that("scanNSxPartitions returns correctly named list",
 {
   skip_on_cran()
 
@@ -85,20 +85,23 @@ test_that("scanNSxPackets returns correctly named list",
   close(conn)
   on.exit()
 
-  # Call the low-level scan function based on version
+  # Call the low-level scan function; file spec 3.0 has 64-bit timestamps
   # ftype$version may be character vector like c("3", "0"), so paste it
   version_str <- paste(ftype$version, collapse = ".")
-  if (grepl("^3", version_str)) {
-    packet_info <- scanNSxPackets30(nsx_path, n_bytes, n_channels, skip_bytes)
-  } else {
-    packet_info <- scanNSxPackets2x(nsx_path, n_bytes, n_channels, skip_bytes)
-  }
+  partitions <- scanNSxPartitions(
+    nsx_path, skip_bytes, n_bytes, n_channels,
+    if (grepl("^3", version_str)) 8L else 4L,
+    header_basic$time_resolution_timestamp, 30000 / header_basic$period,
+    100000, 2
+  )
 
   # Check the named list structure from makeNamedList 4-element
-  expect_type(packet_info, "list")
-  expect_named(packet_info, c("timestamps", "n_data_points", "byte_offsets", "n_packets"))
-  expect_type(packet_info$timestamps, "double")
-  expect_type(packet_info$n_data_points, "double")
-  expect_type(packet_info$byte_offsets, "double")
-  expect_type(packet_info$n_packets, "integer")
+  expect_type(partitions, "list")
+  expect_named(partitions, c("byte_offset", "stride", "n_points", "start_time",
+                           "bytes_unread", "stop_reason"))
+  expect_type(partitions$byte_offset, "double")
+  expect_type(partitions$stride, "double")
+  expect_type(partitions$n_points, "double")
+  expect_type(partitions$start_time, "double")
+  expect_true(length(partitions$n_points) >= 1)
 })

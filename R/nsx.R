@@ -225,6 +225,32 @@ read_nsx_legacy <- function(path, prefix = NULL, fresh_start = FALSE, spec = NUL
 }
 
 
+# Options that control how `read_nsx` reads data points, checked before
+# anything is written so that a bad value fails early and names the option
+nsx_reader_options <- function() {
+  is_number <- function(x) {
+    is.numeric(x) && length(x) == 1 && isTRUE(is.finite(x))
+  }
+  chunk_size <- getOption("readNSx.chunk_size", 1000000L)
+  if (!is_number(chunk_size) || chunk_size < 1) {
+    stop("Option 'readNSx.chunk_size' (data points read per batch) must be a number of at least 1")
+  }
+  packets_per_frame <- getOption("readNSx.packets_per_frame", 100000)
+  if (!is_number(packets_per_frame) || packets_per_frame < 2 ||
+      packets_per_frame != floor(packets_per_frame)) {
+    stop("Option 'readNSx.packets_per_frame' must be a whole number of at least 2")
+  }
+  max_tick_multiple <- getOption("readNSx.max_tick_multiple", 2)
+  if (!is_number(max_tick_multiple) || max_tick_multiple <= 1) {
+    stop("Option 'readNSx.max_tick_multiple' must be a number greater than 1")
+  }
+  list(
+    chunk_size = floor(as.numeric(chunk_size)),
+    packets_per_frame = as.numeric(packets_per_frame),
+    max_tick_multiple = as.numeric(max_tick_multiple)
+  )
+}
+
 # internally used. Do not call by yourself
 read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, partition_prefix = "/part") {
 
@@ -236,6 +262,8 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
 
   partition_prefix <- gsub("[.]", "_", partition_prefix)
   partition_prefix <- gsub("[\\/]{1,}$", "", partition_prefix)
+
+  reader_options <- nsx_reader_options()
 
   # DIPSAUS DEBUG START
   # path <- "/Users/dipterix/rave_data/raw_dir/POR006/b01/datafile_05_09_25.ns5"
@@ -279,6 +307,16 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
     read_sequential(conn, spec$specification$section1$dictionary),
     class = c("readNSx_nsx_basic_header", "readNSx_printable")
   )
+
+  # Timestamps count ticks of a clock running at `time_resolution_timestamp`
+  # Hz: 30000 in most files, 1e9 (nanoseconds) with PTP timestamps. Some
+  # acquisition software writes an implausible value here; fall back to the
+  # 30 kHz clock. `read_nev` has a similar guard, but it only applies to spec
+  # 3.0 and replaces any value below 30000
+  if (!isTRUE(header_basic$time_resolution_timestamp > 2000)) {
+    header_basic$time_resolution_timestamp <- 30000
+  }
+
   # save basic header
   basic_summary <- data.frame(
     filename = sprintf("%s_ieeg", export_filebase),
@@ -363,76 +401,54 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
   intercept <- ((max_analog + min_analog) - slope * (max_digit + min_digit)) / 2
 
   # =============================================================================
-  # Step 1: Scan file to get packet structure (no data loaded into memory)
+  # Step 1: Scan the data blocks into partitions (no data values are read)
   # =============================================================================
-  if (header_basic$file_spec[[1]] >= 3) {
-    packet_info <- scanNSxPackets30(
-      filePath = path, nBytes = data_bytes,
-      nChannels = n_channels, skipBytes = header_basic$bytes_in_headers
-    )
-  } else {
-    packet_info <- scanNSxPackets2x(
-      filePath = path, nBytes = data_bytes,
-      nChannels = n_channels, skipBytes = header_basic$bytes_in_headers
-    )
+  # A partition is one continuous run of data points: a data block holding many
+  # data points, or a run of one-point data blocks (PTP timestamps) that is
+  # split only at pauses. See `scanNSxPartitions` in src/readNSxDataPacket.cpp
+  partitions <- scanNSxPartitions(
+    filePath = path,
+    skipBytes = header_basic$bytes_in_headers,
+    nBytes = data_bytes,
+    nChannels = n_channels,
+    timestampBytes = if (header_basic$file_spec[[1]] >= 3) 8L else 4L,
+    timestampResolution = header_basic$time_resolution_timestamp,
+    sampleRate = sample_rate,
+    packetsPerFrame = reader_options$packets_per_frame,
+    maxTickMultiple = reader_options$max_tick_multiple
+  )
+
+  nsx_data$nparts <- length(partitions$n_points)
+
+  if (nzchar(partitions$stop_reason)) {
+    warning(sprintf(
+      "NSx file %s: stopped reading because %s; %.0f bytes at the end of the file were not imported",
+      file_name, partitions$stop_reason, partitions$bytes_unread
+    ), call. = FALSE)
+  }
+  if (nsx_data$nparts == 0) {
+    warning(sprintf("NSx file %s contains no data points", file_name), call. = FALSE)
   }
 
-  # packet_info contains: timestamps, n_data_points, byte_offsets, n_packets
-
   # =============================================================================
-  # Step 2: Calculate partition structure from packet timestamps
+  # Step 2: Write each partition in batches of data points
   # =============================================================================
-  timestamps_sec <- packet_info$timestamps
-  n_data_points <- as.integer(packet_info$n_data_points)
-  byte_offsets <- packet_info$byte_offsets
+  # The batch size bounds memory use (channels x batch values). Counts and
+  # positions stay doubles, so partitions longer than 2^31 data points work
+  chunk_size <- reader_options$chunk_size
 
-  # Find partition breaks: when there's a gap in expected timestamps
-  # (i.e., packets are not contiguous)
-  partition_indices <- list()
-  if (length(timestamps_sec) > 0) {
-    current_partition_start <- 1
-    for (i in seq_along(timestamps_sec)[-1]) {
-      # Expected time based on previous packet's end
-      expected_time <- timestamps_sec[i - 1] + n_data_points[i - 1] / sample_rate
-      actual_time <- timestamps_sec[i]
-      # Allow small tolerance (2 samples)
-      if (abs(actual_time - expected_time) > 2 / sample_rate) {
-        # Gap detected, end current partition
-        partition_indices <- c(partition_indices, list(current_partition_start:(i - 1)))
-        current_partition_start <- i
-      }
-    }
-    # Add final partition
-    partition_indices <- c(partition_indices, list(current_partition_start:length(timestamps_sec)))
-  }
+  lapply(seq_along(partitions$n_points), function(current_partition) {
 
-  nsx_data$nparts <- length(partition_indices)
-
-  # =============================================================================
-  # Step 3: Process each partition with chunked reading
-  # =============================================================================
-  lapply(seq_along(partition_indices), function(current_partition) {
-
-    packet_idx <- partition_indices[[current_partition]]
-    partition_packets <- length(packet_idx)
-    partition_n_samples <- sum(n_data_points[packet_idx])
-    time_range <- c(
-      timestamps_sec[packet_idx[[1]]],
-      timestamps_sec[packet_idx[[partition_packets]]] +
-        n_data_points[packet_idx[[partition_packets]]] / sample_rate
-    )
+    n_points <- partitions$n_points[[current_partition]]
 
     filename <- sprintf("%s_ieeg%s%d", export_filebase, partition_prefix, current_partition)
-
-    # For NSx 3.0+, use packet timestamp; for older versions, use cumulative time
-    start_time <- time_range[[1]]
 
     tbl <- data.frame(
       filename = filename,
       original_filename = file_name,
       partition = current_partition,
-      duration = time_range[[2]] - time_range[[1]],
-      relative_time = start_time,
+      duration = n_points / sample_rate,
+      relative_time = partitions$start_time[[current_partition]],
       sample_rate = sample_rate,
       internal_partition_key = sprintf("%s__part%s", file_name, current_partition)
     )
@@ -454,8 +470,10 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
         channel_label = channel_label))
 
       # save meta information
+      # 17 significant digits: `relative_time` must survive the JSON round
+      # trip exactly (the default keeps 4 decimals, up to 50 us off)
       save_h5(
-        x = jsonlite::toJSON(as.list(tbl), auto_unbox = TRUE),
+        x = jsonlite::toJSON(as.list(tbl), auto_unbox = TRUE, digits = I(17)),
         file = fname, name = "meta", ctype = "character",
         replace = TRUE, new_file = FALSE, quiet = TRUE
       )
@@ -463,7 +481,7 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
       # Pre-allocate data array
       allocate_h5(
         file = fname, name = "data",
-        dims = partition_n_samples,
+        dims = n_points,
         chunk = 16384L, level = 4,
         replace = TRUE, new_file = FALSE, ctype = "numeric", quiet = TRUE
       )
@@ -471,55 +489,37 @@ read_nsx <- function(path, prefix = NULL, fresh_start = FALSE, spec = NULL, part
       return(fname)
     })
 
-    # Write data packet by packet, with sub-chunking for large packets
-    # Chunk size: limit memory usage by reading at most ~1M samples at a time
-    # This prevents memory issues when a single packet contains billions of samples
-    chunk_size <- getOption("readNSx.chunk_size", 1000000L)
+    first_point <- 0
+    while (first_point < n_points) {
+      n_batch <- min(chunk_size, n_points - first_point)
 
-    write_offset <- 1L
-    for (pkt_i in seq_along(packet_idx)) {
-      pkt_idx <- packet_idx[[pkt_i]]
-      pkt_n_points <- n_data_points[[pkt_idx]]
-      pkt_byte_offset <- byte_offsets[[pkt_idx]]
+      # n_channels x n_batch matrix
+      batch <- readNSxPoints(
+        filePath = path,
+        byteOffset = partitions$byte_offset[[current_partition]],
+        stride = partitions$stride[[current_partition]],
+        nChannels = n_channels,
+        slope = slope,
+        intercept = intercept,
+        firstPoint = first_point,
+        nPoints = n_batch
+      )
 
-      # Sub-chunk within this packet if it's large
-      sample_offset <- 0L
-      while (sample_offset < pkt_n_points) {
-        # Calculate how many samples to read in this chunk
-        samples_remaining <- pkt_n_points - sample_offset
-        samples_to_read <- min(chunk_size, samples_remaining)
-
-        # Read this chunk of the packet's data (returns nChannels x samples_to_read matrix)
-        pkt_data <- readNSxPacketData(
-          filePath = path,
-          byteOffset = pkt_byte_offset,
-          nDataPoints = pkt_n_points,
-          nChannels = n_channels,
-          slope = slope,
-          intercept = intercept,
-          sampleOffset = sample_offset,
-          sampleCount = samples_to_read
+      for (ii in seq_len(n_channels)) {
+        write_h5_slice(
+          x = batch[ii, ],
+          file = h5_files[[ii]],
+          name = "data",
+          start = first_point + 1,
+          quiet = TRUE
         )
-
-        # Write each channel's chunk to its HDF5 file
-        for (ii in seq_len(n_channels)) {
-          write_h5_slice(
-            x = pkt_data[ii, ],
-            file = h5_files[[ii]],
-            name = "data",
-            start = write_offset,
-            quiet = TRUE
-          )
-        }
-
-        write_offset <- write_offset + samples_to_read
-        sample_offset <- sample_offset + samples_to_read
       }
+
+      first_point <- first_point + n_batch
     }
 
     return()
   })
-
 
   # while( data_bytes > 0 ) {
   #   packet_header <- read_sequential(conn, packet_header_spec)

@@ -63,3 +63,26 @@ test_that("read_bci2000_header works with sample file", {
   expect_type(header, "list")
   expect_true("basic_header" %in% names(header) || length(header) > 0)
 })
+
+test_that("parsed BCI2000 parameters survive garbage collection", {
+  skip_on_cran()
+  # one statement per return path of the parameter parser: number, empty list,
+  # list, and string
+  statements <- c(
+    "Filtering int AlignChannels= 0 0 0 1 // align channels in time (0=no, 1=yes)",
+    "Filtering intlist Empty= 0 // no values",
+    "Filtering floatlist SourceChGain= 2 0.01617 0.01591 0.003 -500 500 // gain for each channel",
+    "System string ApplicationIP= 172.16.11.215 127.0.0.1 127.0.0.1 127.0.0.1 // listening IP"
+  )
+  expected <- lapply(statements, parseBCIParamDef)
+
+  # every allocation triggers a garbage collection; switched off again even
+  # when the parser fails
+  torture <- function(expr) {
+    gctorture(TRUE)
+    on.exit(gctorture(FALSE))
+    expr
+  }
+  tortured <- lapply(statements, function(s) torture(parseBCIParamDef(s)))
+  expect_identical(tortured, expected)
+})

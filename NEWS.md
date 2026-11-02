@@ -13,6 +13,46 @@
 * Fixed an error when importing spikes from a recording that has no spikes
 * Added `read_nev_header()` to read the `NEV` headers, such as the channel
   labels, without reading the data packets
+* Importing `NSx` files that store one data point per data block (recordings
+  with precision time protocol, `PTP`, time-stamps) no longer takes days: data
+  points are read and written to `HDF5` in batches instead of once per data
+  block and channel. Partitions are found while scanning the data block
+  headers, so memory use no longer grows with the length of the recording
+* In those files, clock jumps that cancel out within a frame of
+  `readNSx.packets_per_frame` data blocks, and backward jumps, no longer split
+  a continuous recording into several partitions. As in `NPMK` `openNSx`, a
+  forward jump of more than `readNSx.max_tick_multiple` sampling intervals
+  still starts a new partition. In other `NSx` files, each data block is one
+  partition: unchanged for files with a `30 kHz` time-stamp clock, while files
+  with nanosecond time-stamps used to merge data blocks whose time-stamps lined
+  up. If such a file's time-stamps do not tick at the header's
+  `time_resolution_timestamp` (more than half of its data points would start a
+  new partition), the import stops with an error naming that field instead of
+  writing one partition per data point
+* `NSx` time-stamps are converted to seconds with the file's
+  `time_resolution_timestamp` instead of always as nanoseconds. For files with
+  a `30 kHz` time-stamp clock, the `relative_time` of each partition used to be
+  33,333 times too small and now agrees with the `NEV` event times. A
+  resolution of 2000 or less is treated as 30000. The `relative_time` stored
+  with each channel keeps full precision; it used to be rounded to 4 decimals
+  (up to 1.5 samples at `30 kHz`). Imports made by earlier versions keep the
+  old values until they are imported again
+* A data block whose header declares more data points than the file holds is
+  read up to its last complete data point instead of failing. A warning names
+  the file when it ends early, has a corrupt data block header, or holds no
+  data points. A partition can now hold more than 2^31 - 1 data points
+* Invalid values of the options `readNSx.chunk_size`,
+  `readNSx.packets_per_frame` and `readNSx.max_tick_multiple` give an error
+  naming the option before anything is written; `readNSx.chunk_size = 0` used
+  to loop forever
+* Fixed results of the `C++` readers (`NSx` scanning, the legacy `NSx` reader,
+  and `BCI2000` parameters) being exposed to garbage collection before they
+  were returned, which could give wrong values, hangs, or crashes
+* Writing `HDF5` data to an existing file that is not `HDF5` now gives an error
+  and leaves the file alone. The file used to be replaced with an empty `HDF5`
+  file without warning, even when only checking whether it could be written. An
+  empty file is still replaced, so importing again repairs one left behind by
+  an interrupted import
 
 # readNSx 0.1.0
 

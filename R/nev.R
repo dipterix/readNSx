@@ -161,7 +161,7 @@ read_nev <- function( path, prefix = NULL, exclude_events = "spike", spec = NULL
     application = header_basic$application_to_create_file,
 
     # global sample rate (max possible)
-    # for NSx, time_resolution_timestamp / period is the signal sample rate
+    # for NSx, 30000 / period is the signal sample rate
     time_resolution_timestamp = header_basic$time_resolution_timestamp,
 
     # waveform sample rate
