@@ -182,6 +182,34 @@ test_that("h5_valid does not destroy the file it is asked about", {
 })
 
 
+test_that("an existing file that is not HDF5 is never overwritten", {
+  tmp_file <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp_file, force = TRUE), add = TRUE)
+  content <- charToRaw("subject,score\na,1\nb,2\n")
+  writeBin(content, tmp_file)
+
+  # Only asking whether the file can be written must already leave it alone.
+  expect_false(h5_writable(tmp_file))
+  expect_identical(readBin(tmp_file, "raw", n = 1024), content)
+
+  expect_error(save_h5(1:3, tmp_file, "data", quiet = TRUE))
+  expect_identical(readBin(tmp_file, "raw", n = 1024), content)
+
+  expect_error(allocate_h5(tmp_file, "data", dims = 3, quiet = TRUE))
+  expect_identical(readBin(tmp_file, "raw", n = 1024), content)
+})
+
+
+test_that("new_file = TRUE replaces a file that is not HDF5", {
+  tmp_file <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp_file, force = TRUE), add = TRUE)
+  writeBin(charToRaw("subject,score\na,1\nb,2\n"), tmp_file)
+
+  save_h5(1:3, tmp_file, "data", new_file = TRUE, quiet = TRUE)
+  expect_identical(load_h5(tmp_file, "data", ram = TRUE), 1:3)
+})
+
+
 test_that("datasets larger than 2^31 elements are addressable", {
   # Only the touched chunks are ever written, so this costs almost no disk.
   tmp_file <- tempfile(fileext = ".h5")

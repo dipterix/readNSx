@@ -378,7 +378,8 @@ as.array.LazyH5Internal <- function(x, ...) {
 }
 
 # Can the file be opened for writing? Creates an empty HDF5 file when none
-# exists yet.
+# exists yet or the file is empty, and answers FALSE for any other file that is
+# not HDF5.
 h5_writable <- function(file) {
   if (!dir.exists(dirname(file))) { return(FALSE) }
   tryCatch(

@@ -21,6 +21,7 @@
 #include <hdf5.h>
 
 #include <algorithm>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -347,7 +348,15 @@ FileHandle open_file(const std::string& path, bool writable) {
   return file;
 }
 
-// Opens for writing, creating the file when it does not exist yet.
+bool file_is_empty(const std::string& path) {
+  std::ifstream file(path, std::ios::binary);
+  return file.is_open() && file.peek() == std::ifstream::traits_type::eof();
+}
+
+// Opens for writing, creating the file when it does not exist yet. An existing
+// file that is not HDF5 is never overwritten: `H5F_ACC_EXCL` makes that an error.
+// An empty file is the exception: it holds nothing to lose, and an import killed
+// right after creating a file leaves one behind that importing again must reuse.
 FileHandle open_or_create(const std::string& path) {
   quiet_hdf5();
   htri_t is_h5 = H5Fis_accessible(path.c_str(), H5P_DEFAULT);
@@ -355,7 +364,8 @@ FileHandle open_or_create(const std::string& path) {
   if (is_h5 > 0) {
     file = H5Fopen(path.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   } else {
-    file = H5Fcreate(path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    unsigned flags = file_is_empty(path) ? H5F_ACC_TRUNC : H5F_ACC_EXCL;
+    file = H5Fcreate(path.c_str(), flags, H5P_DEFAULT, H5P_DEFAULT);
   }
   if (!file.valid()) {
     fail("Cannot open HDF5 file for writing: " + path);
