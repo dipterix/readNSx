@@ -55,10 +55,13 @@ A 'NSx' file also consists of three sections. Section 1 contains basic
 information such as the time-origin of all the time-stamps, sampling
 frequencies, and channel counts within the file. Please be careful that
 item \code{time_resolution_timestamp} is not the sampling frequency for
-signals. This item is the sampling frequency for time-stamp. To obtain the
-signal sample rate, divided \code{time_resolution_timestamp} by
-\code{period}. For example, \code{'ns3'} usually has time-stamp resolution
-\code{30,000} and \code{period=15}, hence the signal sample rate is
+signals. This item is the frequency of the clock that counts time-stamps:
+usually \code{30,000}, or \code{1e9} (nanoseconds) in files recorded with
+precision time protocol (\verb{PTP}) time-stamps. A time-stamp in seconds
+is the time-stamp divided by \code{time_resolution_timestamp}. The signal
+sample rate is \code{30000} divided by \code{period}, the number of
+\code{1/30000} seconds between data points. For example, \code{'ns3'}
+usually has \code{period=15}, hence the signal sample rate is
 \code{30000/15=2000Hz}.
 
 Section 2 usually contains one and only one channel table of which the
@@ -69,10 +72,19 @@ settings, digital-to-analog conversion are also included. Since
 to 'micro-volts', the \code{'units'} column might be different to what's
 actual recorded in the 'NSx' file headers.
 
-Section 3 contains partitions of continuous recording. When imported/loaded
-from \code{readNSx}, the digital signals are always converted to analog
-signals with 'micro-volts' unit. Please use \code{\link{get_channel}} to
-get the channel data.
+Section 3 contains partitions of continuous recording. Usually each data
+block (a time-stamp followed by many data points) is one partition; a new
+data block starts after every pause. In files with \verb{PTP} time-stamps,
+every data block holds one data point, and consecutive blocks form one
+partition until a pause, detected from the time-stamps as the 'Blackrock'
+reader \verb{NPMK} \code{openNSx} does: options \code{'readNSx.packets_per_frame'}
+(default \code{100000}) and \code{'readNSx.max_tick_multiple'} (default
+\code{2}, must be greater than \code{1}) correspond to its
+\code{packets_per_frame} and \code{max_tick_multiple} arguments. When
+imported/loaded from
+\code{readNSx}, the digital signals are always converted to analog signals
+with 'micro-volts' unit. Please use \code{\link{get_channel}} to get the
+channel data.
 }
 
 \examples{

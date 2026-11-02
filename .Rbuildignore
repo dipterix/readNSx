@@ -12,3 +12,4 @@
 ^\.claude$
 ^\.lintr$
 ^revdep$
+^fixing-history$
