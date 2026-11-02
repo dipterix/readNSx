@@ -10,11 +10,18 @@ namespace readnsx {
 // makeNamedList: Create named lists using cpp11 without _nm initializer lists
 // This avoids rchk PROTECT warnings in cpp11's list.hpp
 // See: https://github.com/r-lib/cpp11/issues/445
+//
+// The values are taken as `cpp11::sexp`, not `SEXP`: callers pass freshly
+// allocated, unprotected vectors such as `cpp11::as_sexp(x)`, and converting
+// each argument to `cpp11::sexp` protects it before the next argument is
+// allocated (C++17 completes each argument before starting the next). With
+// plain `SEXP`, a garbage collection triggered by a later allocation could
+// free the earlier values before they are stored in the list.
 // -----------------------------------------------------------------------------
 
 inline cpp11::writable::list makeNamedList(
-    const char* n1, SEXP v1,
-    const char* n2, SEXP v2
+    const char* n1, const cpp11::sexp& v1,
+    const char* n2, const cpp11::sexp& v2
 ) {
     cpp11::writable::list result(2);
     result[0] = v1;
@@ -27,10 +34,10 @@ inline cpp11::writable::list makeNamedList(
 }
 
 inline cpp11::writable::list makeNamedList(
-    const char* n1, SEXP v1,
-    const char* n2, SEXP v2,
-    const char* n3, SEXP v3,
-    const char* n4, SEXP v4
+    const char* n1, const cpp11::sexp& v1,
+    const char* n2, const cpp11::sexp& v2,
+    const char* n3, const cpp11::sexp& v3,
+    const char* n4, const cpp11::sexp& v4
 ) {
     cpp11::writable::list result(4);
     result[0] = v1;
@@ -47,14 +54,40 @@ inline cpp11::writable::list makeNamedList(
 }
 
 inline cpp11::writable::list makeNamedList(
-    const char* n1, SEXP v1,
-    const char* n2, SEXP v2,
-    const char* n3, SEXP v3,
-    const char* n4, SEXP v4,
-    const char* n5, SEXP v5,
-    const char* n6, SEXP v6,
-    const char* n7, SEXP v7,
-    const char* n8, SEXP v8
+    const char* n1, const cpp11::sexp& v1,
+    const char* n2, const cpp11::sexp& v2,
+    const char* n3, const cpp11::sexp& v3,
+    const char* n4, const cpp11::sexp& v4,
+    const char* n5, const cpp11::sexp& v5,
+    const char* n6, const cpp11::sexp& v6
+) {
+    cpp11::writable::list result(6);
+    result[0] = v1;
+    result[1] = v2;
+    result[2] = v3;
+    result[3] = v4;
+    result[4] = v5;
+    result[5] = v6;
+    cpp11::writable::strings names(6);
+    names[0] = n1;
+    names[1] = n2;
+    names[2] = n3;
+    names[3] = n4;
+    names[4] = n5;
+    names[5] = n6;
+    result.names() = names;
+    return result;
+}
+
+inline cpp11::writable::list makeNamedList(
+    const char* n1, const cpp11::sexp& v1,
+    const char* n2, const cpp11::sexp& v2,
+    const char* n3, const cpp11::sexp& v3,
+    const char* n4, const cpp11::sexp& v4,
+    const char* n5, const cpp11::sexp& v5,
+    const char* n6, const cpp11::sexp& v6,
+    const char* n7, const cpp11::sexp& v7,
+    const char* n8, const cpp11::sexp& v8
 ) {
     cpp11::writable::list result(8);
     result[0] = v1;

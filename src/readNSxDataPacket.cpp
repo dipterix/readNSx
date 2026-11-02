@@ -1,4 +1,10 @@
+#include <algorithm>
+#include <climits>
+#include <cmath>
+#include <cstdint>
 #include <fstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 #include <cpp11.hpp>
 #include "common.h"
@@ -6,223 +12,352 @@ using namespace cpp11;
 namespace writable = cpp11::writable;
 
 // =============================================================================
-// Scan NSx file to get packet information without reading data
-// This allows pre-allocating HDF5 files and reading data in chunks
+// Scan an NSx file into partitions without reading the data values
+//
+// Terms follow the NSx specification (LB-0023): a data block is a 0x01 byte, a
+// timestamp, the number of data points, and the data points; a data point
+// holds one int16 per channel.
+//
+// A data block with more than one data point is a partition by itself: a new
+// data block starts after every pause. Runs of consecutive one-point data
+// blocks (recordings with PTP timestamps) are split only at pauses, found the
+// way Blackrock's NPMK `openNSx` does: the run is checked in frames of
+// `packetsPerFrame` data blocks (neighbouring frames share their boundary
+// block); a frame whose elapsed time exceeds what its data points imply by at
+// least `maxTickMultiple - 1` sampling intervals is split wherever two
+// consecutive timestamps are more than `maxTickMultiple` intervals apart.
+// Clock jumps that cancel out within a frame, and backward jumps, never split.
+//
+// Besides one row per partition, the result has `bytes_unread` and
+// `stop_reason` (empty when the whole data section was read), so that R can
+// warn when a file ends early or has a corrupt data block header.
+//
+// Counts and file positions are 64-bit: a partition may hold more than 2^32
+// data points and files may be larger than 4 GB.
 // =============================================================================
 
-// A is uint64_t or uint32_t (timestamp)
-// B is uint32_t indicating number of data points
-// C is the data element type (e.g., int16_t)
-template <typename A, typename B, typename C>
-SEXP scanNSxPackets(const std::string& filePath,
-                    const size_t& nBytes,
-                    const int& nChannels,
-                    const size_t& skipBytes = 0) {
-    try {
-        const int typeSize = 1;
-        const int timeSize = sizeof(A);
-        const int overheadSize = typeSize + timeSize + sizeof(B);
-        const size_t elemSize = sizeof(C);
+namespace {
 
-        std::vector<double> timestamps;     // packet start times (nanoseconds -> seconds)
-        std::vector<double> nDataPoints;    // number of data points per packet
-        std::vector<double> byteOffsets;    // byte offset of data (after header) from file start
+struct PartitionTable {
+    std::vector<double> byteOffset;   // file position of the first data point values
+    std::vector<double> stride;       // bytes from one data point to the next
+    std::vector<double> nPoints;      // number of data points
+    std::vector<double> startTime;    // first timestamp in seconds
 
-        std::ifstream input(filePath, std::ios::binary);
-        if (!input.is_open()) {
-            throw std::runtime_error("Cannot open file for reading.");
-        }
-
-        // Skip header bytes
-        input.seekg(skipBytes, std::ios::beg);
-
-        size_t remainBytes = nBytes;
-        size_t currentOffset = skipBytes;
-
-        char headerBuf[24];  // max overhead size for NSx 3.0
-
-        while (remainBytes >= (size_t)overheadSize) {
-            cpp11::check_user_interrupt();
-
-            input.read(headerBuf, overheadSize);
-            if (!input) {
-                break;
-            }
-
-            if (headerBuf[0] != 1) {
-                // Invalid packet header
-                break;
-            }
-
-            remainBytes -= overheadSize;
-            currentOffset += overheadSize;
-
-            // Read timestamp
-            A currentTime_ = 0;
-            readnsx::convertBuffer(&currentTime_, headerBuf + typeSize, 1);
-            double currentTime = ((double)currentTime_) / 1000000000.0;
-
-            // Read number of data points
-            B nPoints = 0;
-            readnsx::convertBuffer(&nPoints, headerBuf + (typeSize + timeSize), 1);
-
-            size_t nPointsInBytes = (size_t)(nPoints) * elemSize * nChannels;
-
-            timestamps.push_back(currentTime);
-            nDataPoints.push_back((double)nPoints);
-            byteOffsets.push_back((double)currentOffset);
-
-            // Skip the data section
-            if (nPointsInBytes > remainBytes) {
-                nPointsInBytes = remainBytes;
-            }
-            input.seekg(nPointsInBytes, std::ios::cur);
-            remainBytes -= nPointsInBytes;
-            currentOffset += nPointsInBytes;
-        }
-
-        return readnsx::makeNamedList(
-            "timestamps", cpp11::as_sexp(timestamps),
-            "n_data_points", cpp11::as_sexp(nDataPoints),
-            "byte_offsets", cpp11::as_sexp(byteOffsets),
-            "n_packets", cpp11::as_sexp((int)timestamps.size())
-        );
-
-    } catch (const std::exception& e) {
-        ::Rf_error("%s", e.what());
-    } catch (...) {
-        ::Rf_error("Unknown error during scanning NSx file.");
+    void add(uint64_t offset, uint64_t strideBytes, uint64_t n,
+             uint64_t timestamp, double timestampResolution) {
+        byteOffset.push_back((double) offset);
+        stride.push_back((double) strideBytes);
+        nPoints.push_back((double) n);
+        startTime.push_back((double) timestamp / timestampResolution);
     }
-    return R_NilValue;
+};
+
+// whole non-negative number that fits in 64 bits, from an R double
+uint64_t as_count(const double& x, const char* what) {
+    if (!R_FINITE(x) || x < 0 || x != std::floor(x) || x >= 18446744073709551616.0) {
+        throw std::runtime_error(std::string(what) + " must be a non-negative whole number.");
+    }
+    return (uint64_t) x;
+}
+
 }
 
 [[cpp11::register]]
-SEXP scanNSxPackets30(const std::string& filePath,
-                      const size_t& nBytes,
-                      const int& nChannels,
-                      const size_t& skipBytes) {
-    return scanNSxPackets<uint64_t, uint32_t, int16_t>(filePath, nBytes, nChannels, skipBytes);
+SEXP scanNSxPartitions(const std::string& filePath,
+                       const double& skipBytes,
+                       const double& nBytes,
+                       const int& nChannels,
+                       const int& timestampBytes,
+                       const double& timestampResolution,
+                       const double& sampleRate,
+                       const double& packetsPerFrame,
+                       const double& maxTickMultiple) {
+    if (nChannels <= 0) {
+        throw std::runtime_error("nChannels must be positive.");
+    }
+    if (timestampBytes != 4 && timestampBytes != 8) {
+        throw std::runtime_error("timestampBytes must be 4 or 8.");
+    }
+    if (!(timestampResolution > 0) || !(sampleRate > 0) || !(maxTickMultiple > 0)) {
+        throw std::runtime_error("timestampResolution, sampleRate and maxTickMultiple must be positive.");
+    }
+    const uint64_t frameSize = as_count(packetsPerFrame, "packetsPerFrame");
+    if (frameSize < 2) {
+        throw std::runtime_error("packetsPerFrame must be at least 2.");
+    }
+
+    const uint64_t headerSize = 1 + timestampBytes + 4;
+    const uint64_t pointSize = 2 * (uint64_t) nChannels;
+    const uint64_t blockStride = headerSize + pointSize;  // one-point data blocks
+    // thresholds computed in the same order as NPMK, so ties round the same way
+    const double ticksPerPoint = timestampResolution / sampleRate;
+    const double pauseTicks = maxTickMultiple * ticksPerPoint;
+    const double extraTicks = pauseTicks - ticksPerPoint;
+
+    // a larger stream buffer: one-point data blocks are read back to back
+    std::vector<char> streamBuffer(1 << 20);
+    std::ifstream input;
+    input.rdbuf()->pubsetbuf(streamBuffer.data(), streamBuffer.size());
+    input.open(filePath, std::ios::binary);
+    if (!input.is_open()) {
+        throw std::runtime_error("Cannot open file for reading.");
+    }
+
+    uint64_t position = as_count(skipBytes, "skipBytes");
+    uint64_t remainBytes = as_count(nBytes, "nBytes");
+    input.seekg((std::streamoff) position, std::ios::beg);
+
+    PartitionTable table;
+
+    // the current run of one-point data blocks; indices count data points
+    // from the start of the run
+    bool inRun = false;
+    uint64_t runOffset = 0;       // file position of the run's first values
+    uint64_t runCount = 0;        // data points in the run so far
+    uint64_t partStart = 0;       // where the open partition starts
+    uint64_t partTimestamp = 0;   // timestamp of that data point
+    uint64_t frameStart = 0;      // run index of frame[0]
+    uint64_t runPauses = 0;       // pauses found in the run so far
+    std::vector<uint64_t> frame;  // timestamps of the current frame
+    frame.reserve((size_t) std::min<uint64_t>(frameSize, 1 << 20));
+
+    // A recording does not pause at most of its data points. If it seems to,
+    // the timestamps do not tick at `timestampResolution` (a wrong header
+    // value), and splitting would create one partition per data point
+    auto checkPlausible = [&]() {
+        const uint64_t steps = frameStart + frame.size() - 1;
+        if (steps < 10 || runPauses * 2 <= steps) { return; }
+        std::vector<double> diffs;
+        for (size_t j = 0; j + 1 < frame.size(); j++) {
+            diffs.push_back((double) (int64_t) (frame[j + 1] - frame[j]));
+        }
+        std::nth_element(diffs.begin(), diffs.begin() + diffs.size() / 2, diffs.end());
+        throw std::runtime_error(
+            "NSx file " + filePath + ": the time-stamps advance about " +
+            std::to_string((long long) diffs[diffs.size() / 2]) +
+            " ticks per data point, but time_resolution_timestamp = " +
+            std::to_string((long long) timestampResolution) + " at " +
+            std::to_string((long long) sampleRate) + " Hz implies " +
+            std::to_string(ticksPerPoint) + ", so more than half of the data " +
+            "points would start a new partition. The time-stamp resolution in " +
+            "the file header looks wrong.");
+    };
+
+    auto checkFrame = [&]() {
+        const size_t k = frame.size();
+        if (k < 2) { return; }
+        // unsigned difference reinterpreted as signed: a backward jump is
+        // negative, not a huge positive number
+        const double elapsed = (double) (int64_t) (frame[k - 1] - frame[0]);
+        const double expected = (double) (k - 1) * ticksPerPoint;
+        if (elapsed < expected + extraTicks) { return; }
+        for (size_t j = 0; j + 1 < k; j++) {
+            const double step = (double) (int64_t) (frame[j + 1] - frame[j]);
+            if (step > pauseTicks) {
+                const uint64_t last = frameStart + j;  // last data point before the pause
+                table.add(runOffset + partStart * blockStride, blockStride,
+                          last - partStart + 1, partTimestamp, timestampResolution);
+                partStart = last + 1;
+                partTimestamp = frame[j + 1];
+                runPauses++;
+            }
+        }
+        checkPlausible();
+    };
+
+    auto closeRun = [&]() {
+        if (!inRun) { return; }
+        checkFrame();
+        if (runCount > partStart) {
+            table.add(runOffset + partStart * blockStride, blockStride,
+                      runCount - partStart, partTimestamp, timestampResolution);
+        }
+        inRun = false;
+        frame.clear();
+    };
+
+    char header[13];  // 0x01, timestamp (4 or 8 bytes), number of data points
+    uint64_t nBlocks = 0;
+    std::string stopReason;  // why the scan ended before the end of the data
+
+    while (remainBytes >= headerSize) {
+        if ((++nBlocks & 0xFFFF) == 0) {
+            cpp11::check_user_interrupt();
+        }
+
+        input.read(header, headerSize);
+        if (!input) {
+            stopReason = "the file could not be read to its end";
+            break;
+        }
+        if (header[0] != 1) {
+            stopReason = "a data block header does not start with 0x01";
+            break;
+        }
+        position += headerSize;
+        remainBytes -= headerSize;
+
+        uint64_t timestamp = 0;
+        if (timestampBytes == 8) {
+            readnsx::convertBuffer(&timestamp, header + 1, 1);
+        } else {
+            uint32_t timestamp32 = 0;
+            readnsx::convertBuffer(&timestamp32, header + 1, 1);
+            timestamp = timestamp32;
+        }
+        uint32_t declared = 0;
+        readnsx::convertBuffer(&declared, header + 1 + timestampBytes, 1);
+
+        // a truncated last data block keeps only its complete data points
+        const uint64_t available = remainBytes / pointSize;
+        const uint64_t nPoints = std::min<uint64_t>(declared, available);
+
+        if (declared == 1 && nPoints == 1) {
+            // a one-point data block not adjacent to the run cannot share its
+            // stride; does not happen in well-formed files
+            if (inRun && position != runOffset + runCount * blockStride) {
+                closeRun();
+            }
+            if (!inRun) {
+                inRun = true;
+                runOffset = position;
+                runCount = 0;
+                partStart = 0;
+                partTimestamp = timestamp;
+                frameStart = 0;
+                runPauses = 0;
+            }
+            frame.push_back(timestamp);
+            runCount++;
+            if (frame.size() >= frameSize) {
+                checkFrame();
+                const uint64_t boundary = frame.back();
+                frame.clear();
+                frame.push_back(boundary);
+                frameStart = runCount - 1;
+            }
+        } else {
+            // multi-point and empty data blocks end a run: they change the
+            // byte layout the run's stride relies on
+            closeRun();
+            if (nPoints > 0) {
+                table.add(position, pointSize, nPoints, timestamp, timestampResolution);
+            }
+        }
+
+        const uint64_t dataBytes = nPoints * pointSize;
+        if (dataBytes <= streamBuffer.size()) {
+            input.ignore((std::streamsize) dataBytes);
+        } else {
+            input.seekg((std::streamoff) dataBytes, std::ios::cur);
+        }
+        position += dataBytes;
+        remainBytes -= dataBytes;
+
+        if (nPoints < declared) {
+            stopReason = "the last data block holds fewer data points than its header declares";
+            break;
+        }
+    }
+    if (stopReason.empty() && remainBytes > 0) {
+        stopReason = "the file ends inside a data block header";
+    }
+    closeRun();
+
+    return readnsx::makeNamedList(
+        "byte_offset", cpp11::as_sexp(table.byteOffset),
+        "stride", cpp11::as_sexp(table.stride),
+        "n_points", cpp11::as_sexp(table.nPoints),
+        "start_time", cpp11::as_sexp(table.startTime),
+        "bytes_unread", cpp11::as_sexp((double) remainBytes),
+        "stop_reason", cpp11::as_sexp(stopReason)
+    );
 }
+
+// =============================================================================
+// Read data points `firstPoint` to `firstPoint + nPoints - 1` of one partition
+// Data point k of the partition starts `byteOffset + k * stride` bytes into the
+// file (see `scanNSxPartitions`). Returns a nChannels x nPoints matrix of
+// `value * slope + intercept`.
+// =============================================================================
 
 [[cpp11::register]]
-SEXP scanNSxPackets2x(const std::string& filePath,
-                      const size_t& nBytes,
-                      const int& nChannels,
-                      const size_t& skipBytes) {
-    return scanNSxPackets<uint32_t, uint32_t, int16_t>(filePath, nBytes, nChannels, skipBytes);
-}
+SEXP readNSxPoints(const std::string& filePath,
+                   const double& byteOffset,
+                   const double& stride,
+                   const int& nChannels,
+                   const cpp11::doubles& slope,
+                   const cpp11::doubles& intercept,
+                   const double& firstPoint,
+                   const double& nPoints) {
+    if (nChannels <= 0) {
+        throw std::runtime_error("nChannels must be positive.");
+    }
+    if (slope.size() < nChannels || intercept.size() < nChannels) {
+        throw std::runtime_error("slope and intercept need one value per channel.");
+    }
+    const uint64_t pointSize = 2 * (uint64_t) nChannels;
+    const uint64_t strideBytes = as_count(stride, "stride");
+    if (strideBytes < pointSize) {
+        throw std::runtime_error("stride is smaller than one data point.");
+    }
+    const uint64_t first = as_count(firstPoint, "firstPoint");
+    const uint64_t count = as_count(nPoints, "nPoints");
+    // the result is a matrix: its column count is limited to 2^31 - 1
+    if (count > (uint64_t) INT_MAX) {
+        throw std::runtime_error("nPoints is too large for one read; read in batches.");
+    }
+    const uint64_t start = as_count(byteOffset, "byteOffset") + first * strideBytes;
 
-// =============================================================================
-// Read a single packet's data given byte offset and number of points
-// Returns data as double vector (channel x time, column-major)
-// C is the data element type (e.g., int16_t)
-// sampleOffset: number of time points to skip from the start of the packet (0-based)
-// sampleCount: number of time points to read (-1 means read all remaining)
-// =============================================================================
+    std::vector<double> slopes(nChannels), intercepts(nChannels);
+    for (int c = 0; c < nChannels; c++) {
+        slopes[c] = slope[c];
+        intercepts[c] = intercept[c];
+    }
 
-template <typename C>
-SEXP readNSxPacketDataImpl(const std::string& filePath,
-                           const size_t& byteOffset,
-                           const int& nDataPoints,
-                           const int& nChannels,
-                           const cpp11::doubles& slope,
-                           const cpp11::doubles& intercept,
-                           const int& sampleOffset = 0,
-                           const int& sampleCount = -1) {
-    try {
-        const size_t elemSize = sizeof(C);
-        const size_t bufferSize = 4096;
+    writable::doubles result((R_xlen_t) nChannels * (R_xlen_t) count);
+    double* out = REAL(result.data());
 
-        // Validate sampleOffset
-        if (sampleOffset < 0 || sampleOffset >= nDataPoints) {
-            throw std::runtime_error("sampleOffset out of range.");
-        }
-
-        // Calculate actual number of samples to read
-        int actualSampleCount = sampleCount;
-        if (actualSampleCount < 0 || (sampleOffset + actualSampleCount) > nDataPoints) {
-            actualSampleCount = nDataPoints - sampleOffset;
-        }
-
-        if (actualSampleCount <= 0) {
-            // Return empty matrix
-            writable::doubles result(static_cast<R_xlen_t>(0));
-            result.attr("dim") = writable::integers({nChannels, 0});
-            return result;
-        }
-
-        // Calculate byte offset to skip within packet data section
-        // byteOffset already points to the start of the data section (after packet header)
-        // Each time point has nChannels elements of elemSize bytes
-        const size_t skipBytes = static_cast<size_t>(sampleOffset) * nChannels * elemSize;
-        const size_t actualByteOffset = byteOffset + skipBytes;
-        const size_t totalBytes = static_cast<size_t>(actualSampleCount) * nChannels * elemSize;
-
+    if (count > 0) {
         std::ifstream input(filePath, std::ios::binary);
         if (!input.is_open()) {
             throw std::runtime_error("Cannot open file for reading.");
         }
+        input.seekg((std::streamoff) start, std::ios::beg);
 
-        input.seekg(actualByteOffset, std::ios::beg);
+        // whole data points per read, about 4 MB at a time
+        const uint64_t pointsPerRead = std::max<uint64_t>(1, (4 << 20) / strideBytes);
+        std::vector<char> buffer((size_t) (std::min(pointsPerRead, count) * strideBytes));
 
-        // Allocate output: nChannels x actualSampleCount (column-major for R)
-        writable::doubles result(static_cast<R_xlen_t>(nChannels) * actualSampleCount);
-
-        // Buffer for reading
-        std::vector<char> rawBuf(bufferSize);
-        C* ptrData = reinterpret_cast<C*>(rawBuf.data());
-
-        size_t remainBytes = totalBytes;
-        int timeIdx = 0;
-        int chanIdx = 0;
-
-        while (remainBytes > 0) {
+        uint64_t done = 0;
+        while (done < count) {
             cpp11::check_user_interrupt();
 
-            size_t readSize = std::min(remainBytes, bufferSize);
-            input.read(rawBuf.data(), readSize);
+            const uint64_t m = std::min(pointsPerRead, count - done);
+            // the last data point needs only its values, not the next header
+            input.read(buffer.data(), (std::streamsize) ((m - 1) * strideBytes + pointSize));
             if (!input) {
                 throw std::runtime_error("Unexpected end of file.");
             }
-
-            remainBytes -= readSize;
-            size_t nElements = readSize / elemSize;
-
-            for (size_t i = 0; i < nElements; i++) {
-                // Column-major: result[chanIdx + timeIdx * nChannels]
-                R_xlen_t idx = static_cast<R_xlen_t>(chanIdx) + static_cast<R_xlen_t>(timeIdx) * nChannels;
-                result[idx] = ((double)ptrData[i]) * slope[chanIdx] + intercept[chanIdx];
-
-                chanIdx++;
-                if (chanIdx >= nChannels) {
-                    chanIdx = 0;
-                    timeIdx++;
+            for (uint64_t j = 0; j < m; j++) {
+                const char* values = buffer.data() + j * strideBytes;
+                double* column = out + (R_xlen_t) (done + j) * nChannels;
+                for (int c = 0; c < nChannels; c++) {
+                    int16_t value;
+                    std::memcpy(&value, values + 2 * c, sizeof(int16_t));
+                    column[c] = ((double) value) * slopes[c] + intercepts[c];
                 }
             }
+            done += m;
+            if (done < count && strideBytes > pointSize) {
+                input.ignore((std::streamsize) (strideBytes - pointSize));
+            }
         }
-
-        result.attr("dim") = writable::integers({nChannels, actualSampleCount});
-        return result;
-
-    } catch (const std::exception& e) {
-        ::Rf_error("%s", e.what());
-    } catch (...) {
-        ::Rf_error("Unknown error during reading NSx packet data.");
     }
-    return R_NilValue;
-}
 
-[[cpp11::register]]
-SEXP readNSxPacketData(const std::string& filePath,
-                       const size_t& byteOffset,
-                       const int& nDataPoints,
-                       const int& nChannels,
-                       const cpp11::doubles& slope,
-                       const cpp11::doubles& intercept,
-                       const int& sampleOffset = 0,
-                       const int& sampleCount = -1) {
-    return readNSxPacketDataImpl<int16_t>(filePath, byteOffset, nDataPoints, nChannels,
-                                          slope, intercept, sampleOffset, sampleCount);
+    result.attr("dim") = writable::integers({nChannels, (int) count});
+    return result;
 }
 
 
