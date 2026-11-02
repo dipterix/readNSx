@@ -59,9 +59,12 @@ A 'NSx' file also consists of three sections. Section 1 contains basic
 information such as the time-origin of all the time-stamps, sampling
 frequencies, and channel counts within the file. Please be careful that
 item `time_resolution_timestamp` is not the sampling frequency for
-signals. This item is the sampling frequency for time-stamp. To obtain
-the signal sample rate, divided `time_resolution_timestamp` by `period`.
-For example, `'ns3'` usually has time-stamp resolution `30,000` and
+signals. This item is the frequency of the clock that counts
+time-stamps: usually `30,000`, or `1e9` (nanoseconds) in files recorded
+with precision time protocol (`PTP`) time-stamps. A time-stamp in
+seconds is the time-stamp divided by `time_resolution_timestamp`. The
+signal sample rate is `30000` divided by `period`, the number of
+`1/30000` seconds between data points. For example, `'ns3'` usually has
 `period=15`, hence the signal sample rate is `30000/15=2000Hz`.
 
 Section 2 usually contains one and only one channel table of which the
@@ -72,9 +75,17 @@ Since `readNSx` always attempts to convert signals in 'volts' or
 'milli-volts' to 'micro-volts', the `'units'` column might be different
 to what's actual recorded in the 'NSx' file headers.
 
-Section 3 contains partitions of continuous recording. When
-imported/loaded from `readNSx`, the digital signals are always converted
-to analog signals with 'micro-volts' unit. Please use
+Section 3 contains partitions of continuous recording. Usually each data
+block (a time-stamp followed by many data points) is one partition; a
+new data block starts after every pause. In files with `PTP`
+time-stamps, every data block holds one data point, and consecutive
+blocks form one partition until a pause, detected from the time-stamps
+as the 'Blackrock' reader `NPMK` `openNSx` does: options
+`'readNSx.packets_per_frame'` (default `100000`) and
+`'readNSx.max_tick_multiple'` (default `2`, must be greater than `1`)
+correspond to its `packets_per_frame` and `max_tick_multiple` arguments.
+When imported/loaded from `readNSx`, the digital signals are always
+converted to analog signals with 'micro-volts' unit. Please use
 [`get_channel`](http://dipterix.org/readNSx/reference/get_channel.md) to
 get the channel data.
 
