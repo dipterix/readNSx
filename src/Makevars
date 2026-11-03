@@ -1,5 +1,6 @@
 # `hdf5lib` ships a static build of the HDF5 C library and is declared in
-# LinkingTo, so no system HDF5 installation is needed on any platform.
+# LinkingTo, so no system HDF5 installation is needed. WebAssembly builds
+# cannot use it and use Makevars.webr instead.
 #
 # The API version is pinned so that future HDF5 releases cannot change the
 # semantics readNSx compiles against.

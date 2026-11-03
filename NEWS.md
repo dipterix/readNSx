@@ -53,6 +53,10 @@
   file without warning, even when only checking whether it could be written. An
   empty file is still replaced, so importing again repairs one left behind by
   an interrupted import
+* Fixed the `WebAssembly` build, which has failed since `HDF5` support moved to
+  `hdf5lib`, leaving `webR` users on version 0.0.7, which cannot read `HDF5`
+  data there. `WebAssembly` builds now link the `HDF5` library of the `webR`
+  build tools
 
 # readNSx 0.1.0
 

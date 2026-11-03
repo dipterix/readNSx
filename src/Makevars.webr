@@ -1,0 +1,20 @@
+# Used instead of Makevars for WebAssembly builds (rwasm copies it over
+# Makevars). `hdf5lib` cannot be used here: these builds run on Linux with
+# dependencies installed for Linux, so hdf5lib::ld_flags() gives a Linux
+# library. Link the WebAssembly HDF5 from the webR toolchain instead.
+#
+# - The include path must be in PKG_CPPFLAGS. That places it before the hdf5lib
+#   headers from LinkingTo, so the headers match the library.
+# - No HDF5 API version is pinned: the library is 1.12.3 in webR and 1.14.6 on
+#   r-universe, and the 2.0 pin in Makevars does not exist in either.
+# - r-universe's HDF5 calls libsz when it starts and does not link it for us;
+#   without these flags the build passes and the package fails when it runs.
+# - zlib is left out because webR itself provides it.
+# - The -Wl flags keep this copy of HDF5 private. webR has one symbol table for
+#   all packages, so without them readNSx and another package with its own
+#   HDF5, such as hdf5r, use each other's HDF5 and crash. R only needs
+#   R_init_readNSx, because the native routines are registered there.
+
+PKG_CPPFLAGS = -I$(WASM)/include
+PKG_LIBS = -L$(WASM)/lib -lhdf5 $(if $(wildcard $(WASM)/lib/libsz.a),-lsz -laec) -ldl -lm \
+  -Wl,-Bsymbolic -Wl,--no-export-dynamic -Wl,--export=R_init_readNSx
