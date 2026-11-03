@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">readNSx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,6 +52,7 @@
 <li>Invalid values of the options <code>readNSx.chunk_size</code>, <code>readNSx.packets_per_frame</code> and <code>readNSx.max_tick_multiple</code> give an error naming the option before anything is written; <code>readNSx.chunk_size = 0</code> used to loop forever</li>
 <li>Fixed results of the <code>C++</code> readers (<code>NSx</code> scanning, the legacy <code>NSx</code> reader, and <code>BCI2000</code> parameters) being exposed to garbage collection before they were returned, which could give wrong values, hangs, or crashes</li>
 <li>Writing <code>HDF5</code> data to an existing file that is not <code>HDF5</code> now gives an error and leaves the file alone. The file used to be replaced with an empty <code>HDF5</code> file without warning, even when only checking whether it could be written. An empty file is still replaced, so importing again repairs one left behind by an interrupted import</li>
+<li>Fixed the <code>WebAssembly</code> build, which has failed since <code>HDF5</code> support moved to <code>hdf5lib</code>, leaving <code>webR</code> users on version 0.0.7, which cannot read <code>HDF5</code> data there. <code>WebAssembly</code> builds now link the <code>HDF5</code> library of the <code>webR</code> build tools</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="readnsx-010">readNSx 0.1.0<a class="anchor" aria-label="anchor" href="#readnsx-010"></a></h2><p class="text-muted">CRAN release: 2026-09-02</p>
