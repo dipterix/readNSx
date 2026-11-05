@@ -13,7 +13,7 @@ get_event(x, event_type, ...)
 - x:
 
   path `prefix` (see
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)),
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md)),
   or `'nev/nsx'` object
 
 - event_type:

@@ -1,6 +1,6 @@
 # Changelog
 
-## readNSx 0.1.1
+## readNSx 0.2.0
 
 - `NEV` data packets are now read in chunks, and the packet types of a
   whole chunk are checked at once. Excluded events (by default `spike`)
@@ -17,7 +17,7 @@
 - Fixed an error when importing spikes from a recording that has no
   spikes
 - Added
-  [`read_nev_header()`](http://dipterix.org/readNSx/reference/read_nev_header.md)
+  [`read_nev_header()`](https://dipterix.org/readNSx/reference/read_nev_header.md)
   to read the `NEV` headers, such as the channel labels, without reading
   the data packets
 - Importing `NSx` files that store one data point per data block

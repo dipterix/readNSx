@@ -13,11 +13,11 @@ get_nsp(x)
 - x:
 
   path `prefix` specified in
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md),
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md),
   or `'nev/nsx'` object
 
 ## Value
 
 A list containing `'nev'` and imported `'nsx'` headers, see
-[`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md) for
+[`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md) for
 details

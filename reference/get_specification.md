@@ -86,8 +86,8 @@ as the 'Blackrock' reader `NPMK` `openNSx` does: options
 correspond to its `packets_per_frame` and `max_tick_multiple` arguments.
 When imported/loaded from `readNSx`, the digital signals are always
 converted to analog signals with 'micro-volts' unit. Please use
-[`get_channel`](http://dipterix.org/readNSx/reference/get_channel.md) to
-get the channel data.
+[`get_channel`](https://dipterix.org/readNSx/reference/get_channel.md)
+to get the channel data.
 
 ## Examples
 

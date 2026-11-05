@@ -54,7 +54,7 @@ import_nsp(
 ## Value
 
 A list of configurations, see
-[`get_specification`](http://dipterix.org/readNSx/reference/get_specification.md)
+[`get_specification`](https://dipterix.org/readNSx/reference/get_specification.md)
 for what's contained.
 
 ## Storage format

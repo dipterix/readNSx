@@ -37,7 +37,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.1" id="readnsx-011">readNSx 0.1.1<a class="anchor" aria-label="anchor" href="#readnsx-011"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.0" id="readnsx-020">readNSx 0.2.0<a class="anchor" aria-label="anchor" href="#readnsx-020"></a></h2>
 <ul><li>
 <code>NEV</code> data packets are now read in chunks, and the packet types of a whole chunk are checked at once. Excluded events (by default <code>spike</code>) no longer cost any parsing, and memory use no longer grows with the file size, so importing a <code>NEV</code> file that stores the waveform of every spike is many times faster</li>
 <li>The waveform of each spike is parsed for a whole chunk at once and written to <code>waveforms.h5</code> while reading</li>

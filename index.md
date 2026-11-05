@@ -85,10 +85,10 @@ Some components might subject to `Blackrock` copyright. Please contact
 
 `readNSx` is released under `MPL-2.0` license with copyright
 information. To link `readNSx` in your project (e.g. via R
-[`library(readNSx)`](http://dipterix.org/readNSx/) function), you do NOT
-need to change your license (even for proprietary projects, this makes
-me prefer `MPL-2.0` to other strong copyleft licenses as `GPL`) other
-than including the copyright information when redistributing (see
+[`library(readNSx)`](https://dipterix.org/readNSx/) function), you do
+NOT need to change your license (even for proprietary projects, this
+makes me prefer `MPL-2.0` to other strong copyleft licenses as `GPL`)
+other than including the copyright information when redistributing (see
 `LICENSE` file).
 
 In some rare cases, if you redistribute source code, either modified or

@@ -3,8 +3,8 @@
 Reads the basic and extended headers of a 'NEV' file, such as the
 channel labels and waveform settings, without reading the data packets
 and without writing any file. Unlike
-[`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md), the
-time needed does not grow with the length of the recording.
+[`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md),
+the time needed does not grow with the length of the recording.
 
 ## Usage
 
@@ -24,7 +24,7 @@ A list of `header_basic` (file settings such as the time resolution and
 the data packet size) and `header_extended` (one data frame per extended
 header type, for example `NEUEVLBL` for channel labels and `NEUEVWAV`
 for waveform settings). See
-[`get_specification`](http://dipterix.org/readNSx/reference/get_specification.md)
+[`get_specification`](https://dipterix.org/readNSx/reference/get_specification.md)
 for the fields.
 
 ## Examples

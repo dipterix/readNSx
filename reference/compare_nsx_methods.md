@@ -25,17 +25,17 @@ compare_nsx_methods(
 - exclude_events:
 
   passed to
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md)
 
 - exclude_nsx:
 
   passed to
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md)
 
 - partition_prefix:
 
   passed to
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md)
 
 - tolerance:
 

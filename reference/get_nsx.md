@@ -13,7 +13,7 @@ get_nsx(x, which, ...)
 - x:
 
   path `prefix` specified in
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md),
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md),
   or `'nev/nsx'` object
 
 - which:
@@ -28,4 +28,4 @@ get_nsx(x, which, ...)
 
 'NSx' header information if data is found, otherwise returns `NULL`. See
 Section "'NSx' Data" in
-[`get_specification`](http://dipterix.org/readNSx/reference/get_specification.md)
+[`get_specification`](https://dipterix.org/readNSx/reference/get_specification.md)

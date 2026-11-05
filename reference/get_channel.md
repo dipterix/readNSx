@@ -13,7 +13,7 @@ get_channel(x, channel_id)
 - x:
 
   path `prefix` specified in
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md),
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md),
   or `'nev/nsx'` object
 
 - channel_id:

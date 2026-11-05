@@ -50,7 +50,7 @@ readNSx::import_nsp(
 - `partition_prefix`: see Section “Anatomy of imported files”.
 
 Please check help function
-[`?readNSx::import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md)
+[`?readNSx::import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md)
 
 ### Load imported data from R
 
@@ -212,7 +212,7 @@ The following file types will be generated:
   - `R`: if you want to load them individually, use `raveio::h5_names`
     to get enclosing data names; use `raveio::load_h5` to read specific
     data. `readNSx` also provides high-level functions to load them (see
-    [`?readNSx::get_channel`](http://dipterix.org/readNSx/reference/get_channel.md)).
+    [`?readNSx::get_channel`](https://dipterix.org/readNSx/reference/get_channel.md)).
 - `.tsv` (tab-separated values file): plain text files that can be
   easily read by many languages. You can open them in
   `Microsoft Office: Excel`.

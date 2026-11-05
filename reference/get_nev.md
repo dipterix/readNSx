@@ -13,7 +13,7 @@ get_nev(x, ...)
 - x:
 
   path `prefix` specified in
-  [`import_nsp`](http://dipterix.org/readNSx/reference/import_nsp.md),
+  [`import_nsp`](https://dipterix.org/readNSx/reference/import_nsp.md),
   or `'nev/nsx'` object
 
 - ...:
@@ -24,4 +24,4 @@ get_nev(x, ...)
 
 'NEV' header information if `x` is valid, otherwise `NULL`. See Section
 "'NEV' Data" in
-[`get_specification`](http://dipterix.org/readNSx/reference/get_specification.md)
+[`get_specification`](https://dipterix.org/readNSx/reference/get_specification.md)

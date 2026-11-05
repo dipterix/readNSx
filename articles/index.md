@@ -3,4 +3,4 @@
 ### All vignettes
 
 - [Read 'Blackrock' Neural Event &
-  Signals](http://dipterix.org/readNSx/articles/read-nev-nsx-data.md):
+  Signals](https://dipterix.org/readNSx/articles/read-nev-nsx-data.md):
