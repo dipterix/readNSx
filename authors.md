@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/dipterix/readNSx/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/dipterix/readNSx/blob/v0.2.0/DESCRIPTION)
 
 Wang Z (2026). *readNSx: Read 'Blackrock-Microsystems' Files ('NEV',
 'NSx')*. R package version 0.2.0, <https://dipterix.org/readNSx/>.
