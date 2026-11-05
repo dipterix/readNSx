@@ -1,4 +1,4 @@
-# readNSx 0.1.1
+# readNSx 0.2.0
 
 * `NEV` data packets are now read in chunks, and the packet types of a whole
   chunk are checked at once. Excluded events (by default `spike`) no longer cost
